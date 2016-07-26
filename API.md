@@ -103,10 +103,10 @@ Runner API:
 
 Database:
 Runner:
-Runner_id | Runner_API_token | Runner_CI_token
+Runner_id | Status | Runner_API_token | Runner_CI_token
 
 Run:
-Run_id | State | Runner | Repo | Logs
+Run_id | Status | Runner | Repo | Logs
 
 Batch:
 Batch_id | Run_list | namespace_id
