@@ -39,3 +39,11 @@ Run
 ```
 bccp
 ```
+
+API
+===
+
+See [API.md](https://github.com/Bccp-Team/bccp-server/blob/master/API.md)
+
+Note: If you want to communicate with the API take care of the final '/' of
+your URLs. None of the API's URLs have one.
