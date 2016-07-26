@@ -40,11 +40,12 @@ func SetupRestAPI(wait *sync.WaitGroup) {
 	put_api.HandleFunc("/namespace", PutNamespaceHandler)
 	del_api.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
 
-	/// Launch async server with router
+	// Launch async server with router
 	var err error
 	(*wait).Add(1)
 	go func() {
-		err = http.ListenAndServeTLS(":8000", "server.pem", "server.key", r)
+		http.Handle("/", r)
+		err = http.ListenAndServeTLS(":8000", "server.pem", "server.key", nil)
 		defer (*wait).Done()
 	}()
 	time.Sleep(1 * time.Second)
