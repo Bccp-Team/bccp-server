@@ -7,6 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/bccp/api"
+	"github.com/bccp/runners"
 )
 
 // Info from config file
@@ -37,6 +38,7 @@ func ReadConfig() Config {
 func main() {
 	//var config = ReadConfig()
 	var wait sync.WaitGroup
+	go WaitRunners()
 	api.SetupRestAPI(&wait)
 	wait.Wait()
 }
