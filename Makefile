@@ -1,6 +1,6 @@
 GOPATH_PREFIX=github.com
 API_PKG=${GOPATH_PREFIX}/bccp/api
-MAIN_PKG=${GOPATH_PREFIX}/bccp/main
+MAIN_PKG=${GOPATH_PREFIX}/bccp/bccp
 
 GO=go
 GO_FLAGS=install
