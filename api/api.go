@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func SetupRestAPI(wait *sync.WaitGroup) {
+func SetupRestAPI(wait *sync.WaitGroup, port string, crt_file string, key_file string) {
 	r := mux.NewRouter()
 
 	// Define supported methods
@@ -45,7 +45,9 @@ func SetupRestAPI(wait *sync.WaitGroup) {
 	(*wait).Add(1)
 	go func() {
 		http.Handle("/", r)
-		err = http.ListenAndServeTLS(":8000", "server.pem", "server.key", nil)
+		log.Print("INFO: Launching http server with crt: '" + crt_file + "'")
+		log.Print("      and key: '" + key_file + "'")
+		err = http.ListenAndServeTLS(":"+port, crt_file, key_file, nil)
 		defer (*wait).Done()
 	}()
 	time.Sleep(1 * time.Second)

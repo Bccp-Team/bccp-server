@@ -7,16 +7,16 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/bccp/api"
-	"github.com/bccp/runners"
 )
 
 // Info from config file
 type Config struct {
-	server_key_file string
-	server_crt_file string
-	bccp_database   string
-	bccp_user       string
-	bccp_password   string
+	Port           string
+	Key_file       string
+	Crt_file       string
+	Mysql_database string
+	Mysql_user     string
+	Mysql_password string
 }
 
 // Reads info from config file
@@ -31,14 +31,13 @@ func ReadConfig() Config {
 	if _, err := toml.DecodeFile(configfile, &config); err != nil {
 		log.Fatal(err)
 	}
-	//log.Print(config.Index)
 	return config
 }
 
 func main() {
-	//var config = ReadConfig()
+	var config = ReadConfig()
 	var wait sync.WaitGroup
 	go WaitRunners()
-	api.SetupRestAPI(&wait)
+	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
 	wait.Wait()
 }
