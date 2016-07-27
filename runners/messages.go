@@ -7,6 +7,7 @@ const (
 	Kill
 	Logs
 	Error
+	Run
 )
 
 type SubscribeRequest struct {
@@ -19,20 +20,22 @@ type SubscribeAnswer struct {
 
 type ClientRequest struct {
 	Kind        int
+	JobId       uint
 	Logs        []string
+	Message     string
 	ReturnValue int
 }
 
 type ServerRequest struct {
 	Kind int
-	run  *RunRequest
+	Run  *RunRequest
 }
 
 type RunRequest struct {
 	Init       string
 	Repo       string
 	Name       string
-	RunId      uint
+	JobId      uint
 	UpdateTime uint
 	Timeout    uint
 }

@@ -71,7 +71,7 @@ func handleClient(conn net.Conn) {
 		return
 	}
 
-	//FIXME: generate Token and ClientUid"command.hh"
+	//FIXME: generate ClientUid
 	var uid uint = 0
 	answer := SubscribeAnswer{ClientUID: uid}
 
@@ -97,10 +97,28 @@ func handleClient(conn net.Conn) {
 
 		switch clientReq.Kind {
 		case Ack:
+			ack(uid)
 		case Finish:
+			finish(uid, clientReq.ReturnValue)
 		case Logs:
+			logs(uid, clientReq.Logs)
 		case Error:
 		default:
 		}
+	}
+}
+
+func ack(uid uint) {
+	log.Printf("Ack from %u", uid)
+}
+
+func finish(uid uint, returnValue int) {
+	log.Printf("Finish from %u, %d", uid, returnValue)
+}
+
+func logs(uid uint, logs []string) {
+	log.Printf("Logs from %u\n")
+	for i := 0; i < len(logs); i = i + 1 {
+		log.Printf(logs[i])
 	}
 }
