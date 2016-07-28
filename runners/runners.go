@@ -7,7 +7,11 @@ import (
 	"sync"
 )
 
-var runnerMaps map[uint]*clientInfo
+var (
+	runnerService string
+	runnerToken   string
+	runnerMaps    map[uint]*clientInfo
+)
 
 func WaitRunners(service string, token string) {
 
@@ -38,7 +42,7 @@ func WaitRunners(service string, token string) {
 
 type clientInfo struct {
 	uid        uint
-	currentRun int
+	currentRun uint
 	conn       net.Conn
 	mut        sync.Mutex
 	encoder    *gob.Encoder
