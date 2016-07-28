@@ -50,10 +50,10 @@ func main() {
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
 	var db mysql.Database
 	db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
-	for _, r := range db.ListRunners() {
-		println("(", r.Id, " ", r.Status, ")")
+	for _, r := range db.ListRuns() {
+		println("(", r.Id, " ", r.Status, " ", r.Runner_id, ")")
 	}
-	r := db.GetRunner(1)
-	println("(", r.Id, " ", r.Status, ")")
+	r := db.GetRun(1)
+	println("(", r.Id, " ", r.Status, " ", r.Runner_id, ")")
 	wait.Wait()
 }
