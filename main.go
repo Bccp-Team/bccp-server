@@ -54,18 +54,31 @@ func main() {
 
 	// Mysql tests
 	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
-	id, _ := mysql.Db.AddRun("test")
-	mysql.Db.LaunchRun(id, 1)
-	mysql.Db.UpdateRunStatus(id, "timeout")
-	mysql.Db.UpdateRunLogs(id, "lol")
-	mysql.Db.UpdateRunLogs(id, "lel")
-	mysql.Db.UpdateRunLogs(id, "lol")
-	id, _ = mysql.Db.AddRun("bite")
-	id, _ = mysql.Db.AddRun("poil")
-	runs, _ := mysql.Db.ListRuns()
-	for _, run := range runs {
-		println("(", run.Id, run.Status, run.Runner_id, run.Repo, run.Logs, ")")
+	mysql.Db.AddNamespace("lol")
+	mysql.Db.AddRepoToNamespace("lol", "bite/lol")
+	mysql.Db.AddRepoToNamespace("lol", "bite/lel")
+	mysql.Db.AddRepoToNamespace("lol", "bite/couille")
+	mysql.Db.DeleteRepoFromNamespace("lol", "bite/couille")
+	mysql.Db.AddNamespace("lo")
+	mysql.Db.AddRepoToNamespace("lo", "bite/couille")
+	mysql.Db.AddRepoToNamespace("lo", "bite/couille")
+	println("-----------")
+	ns, _ := mysql.Db.ListNamespaces()
+	for _, n := range ns {
+		println("(", n, ")")
 	}
+	println("-----------")
+	mysql.Db.DeleteNamespace("lo")
+	ns, _ = mysql.Db.ListNamespaces()
+	for _, n := range ns {
+		println("(", n, ")")
+	}
+	println("-----------")
+	repos, _ := mysql.Db.GetNamespaceRepos("lol")
+	for _, n := range repos {
+		println("(", n, ")")
+	}
+	println("-----------")
 
 	wait.Wait()
 }

@@ -11,7 +11,7 @@ func (db *Database) ListNamespaces() ([]string, error) {
 
 	var name string
 	// Execute the query
-	rows, err := db.conn.Query("SELECT * FROM run")
+	rows, err := db.conn.Query("SELECT * FROM namespace")
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
 		return nil, err
@@ -38,53 +38,47 @@ func (db *Database) ListNamespaces() ([]string, error) {
 	return namespaces, nil
 }
 
-func (db *Database) AddRepoToNamepace(namespace string, depo string) (int, error) {
-	req := "INSERT INTO namespace_repos VALUES(NULL,?,?)"
+func (db *Database) AddNamespace(namespace string) error {
+	req := "INSERT INTO namespace VALUES(?)"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
-		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
-		return -1, err
+		log.Print("ERROR: Unable to prepare add namespace: ", err.Error())
+		return err
 	}
 	defer insert.Close()
 
-	res, err := insert.Exec(namespace, depo)
+	_, err = insert.Exec(namespace)
 	if err != nil {
 		log.Print("ERROR: Unable to insert runner: ", err.Error())
-		return -1, err
+		return err
 	}
-	id, _ := res.LastInsertId()
-	return int(id), nil
+	return nil
 }
 
-// Get namespace's repos
-func (db *Database) GetNamespaceRepos(name string) ([]string, error) {
-
-	var repo string
-	// Execute the query
-	req := "SELECT repo FROM namespace_repos where namespace='" + name + "'"
-	rows, err := db.conn.Query(req)
+func (db *Database) DeleteNamespace(namespace string) error {
+	repos, err := db.GetNamespaceRepos(namespace)
 	if err != nil {
-		log.Print("ERROR: Unable to select namespace repos: ", err.Error())
-		return nil, err
+		log.Print("ERROR: Unable to prepare delete namespace: ", err.Error())
+		return err
 	}
 
-	var namespace []string
-
-	// Fetch rows
-	for rows.Next() {
-		// get RawBytes from data
-		err = rows.Scan(&repo)
-		if err != nil {
-			log.Print("ERROR: Unable to get next row: ", err.Error())
-			return nil, err
-		}
-
-		namespace = append(namespace, repo)
-	}
-	if err = rows.Err(); err != nil {
-		log.Print("ERROR: Undefined row err: ", err.Error())
-		return namespace, err
+	for _, repo := range repos {
+		db.DeleteRepoFromNamespace(namespace, repo)
 	}
 
-	return namespace, nil
+	req := "delete from namespace where name=?"
+	del, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare delete namespace: ", err.Error())
+		return err
+	}
+	defer del.Close()
+
+	_, err = del.Exec(namespace)
+	if err != nil {
+		log.Print("ERROR: Unable to delete namespace: ", err.Error())
+		return err
+	}
+
+	return nil
 }

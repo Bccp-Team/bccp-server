@@ -1,9 +1,11 @@
+set foreign_key_checks = 0;
 drop table if exists runner cascade;
 drop table if exists run cascade;
 drop table if exists namespace cascade;
 drop table if exists namespace_repos cascade;
 drop table if exists batch cascade;
 drop table if exists batch_runs cascade;
+set foreign_key_checks = 1;
 
 create table runner
 (
@@ -22,10 +24,11 @@ create table run
 	status	varchar(16)	not null default 'waiting'
 				check (status in ('waiting', 'running',
 				'canceled', 'finished', 'failed', 'timeout')),
-	runner	int		not null default -1 references runner(id),
+	runner	bigint unsigned not null,
 	repo	varchar(64)	not null,
 	logs	text		not null,
-	primary key (id)
+	primary key (id),
+	foreign key(runner) references runner(id)
 );
 
 create table namespace
@@ -37,22 +40,26 @@ create table namespace
 create table namespace_repos
 (
 	id		serial		not null,
-	namespace	varchar(64)	not null references namespace(name),
+	namespace	varchar(64)	not null,
 	repo		varchar(64)	not null,
-	primary key (id)
+	primary key (id),
+	foreign key(namespace) references namespace(name)
 );
 
 create table batch
 (
 	id		serial		not null,
-	namespace	varchar(64)	not null references namespace(name),
-	primary key (id)
+	namespace	varchar(64)	not null,
+	primary key (id),
+	foreign key(namespace) references namespace(name)
 );
 
 create table batch_runs
 (
 	id		serial		not null,
-	batch		int		not null references batch(id),
-	run		int		not null references run(id),
-	primary key (id)
+	batch		bigint unsigned	not null,
+	run		bigint unsigned	not null,
+	primary key (id),
+	foreign key(batch) references batch(id),
+	foreign key(run) references run(id)
 );
