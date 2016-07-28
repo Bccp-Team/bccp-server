@@ -38,12 +38,30 @@ func (db *Database) ListNamespaces() ([]string, error) {
 	return namespaces, nil
 }
 
+func (db *Database) AddRepoToNamepace(namespace string, depo string) (int, error) {
+	req := "INSERT INTO namespace_repos VALUES(NULL,?,?)"
+	insert, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
+		return -1, err
+	}
+	defer insert.Close()
+
+	res, err := insert.Exec(namespace, depo)
+	if err != nil {
+		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		return -1, err
+	}
+	id, _ := res.LastInsertId()
+	return int(id), nil
+}
+
 // Get namespace's repos
 func (db *Database) GetNamespaceRepos(name string) ([]string, error) {
 
 	var repo string
 	// Execute the query
-	req := "SELECT repo FROM where namespace='" + name + "'"
+	req := "SELECT repo FROM namespace_repos where namespace='" + name + "'"
 	rows, err := db.conn.Query(req)
 	if err != nil {
 		log.Print("ERROR: Unable to select namespace repos: ", err.Error())
