@@ -52,7 +52,8 @@ Run:
 	- DELETE /run/{id}
 
 Batch:
----------
+------
+
   - GET /batch/{id}:
     return: { run_waiting: [ run_id1, run_id2, ... ] ,
                   run_running: [ run_id1, run_id2, ... ],
@@ -61,7 +62,8 @@ Batch:
   - DELETE /batch/{id}
 
 Namespace:
-----------------
+----------
+
   - GET /namespace:
     return: [ { namespace_name: NAME, repositories:[ repo1, repo2, ... ] }, ... ]
   - GET /namespace/{name}:

@@ -8,17 +8,20 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type Runner struct {
-	Id     int
-	Status string
+type Run struct {
+	Id        int
+	Status    string
+	Runner_id int
+	Repo      string
+	Logs      string
 }
 
-func (db *Database) ListRunners() []Runner {
+func (db *Database) ListRuns() []Run {
 
 	// Execute the query
-	rows, err := db.conn.Query("SELECT * FROM runner")
+	rows, err := db.conn.Query("SELECT * FROM run")
 	if err != nil {
-		log.Fatal("ERROR: Unable to select runner: ", err.Error())
+		log.Fatal("ERROR: Unable to select run: ", err.Error())
 	}
 
 	// Get column names
@@ -38,7 +41,7 @@ func (db *Database) ListRunners() []Runner {
 		scanArgs[i] = &values[i]
 	}
 
-	var runners []Runner
+	var runs []Run
 
 	// Fetch rows
 	for rows.Next() {
@@ -51,33 +54,42 @@ func (db *Database) ListRunners() []Runner {
 		// Now fetch the data.
 		id, err := strconv.Atoi(string(values[0]))
 		if err != nil {
-			log.Fatal("ERROR: Runner id conversion error: ", err.Error())
+			log.Fatal("ERROR: Run id conversion error: ", err.Error())
 		}
 		status := string(values[1])
-		runners = append(runners, Runner{id, status})
+		runner_id, err := strconv.Atoi(string(values[2]))
+		if err != nil {
+			log.Fatal("ERROR: Runner id conversion error: ", err.Error())
+		}
+		repo := string(values[3])
+		logs := string(values[4])
+		runs = append(runs, Run{id, status, runner_id, repo, logs})
 	}
 	if err = rows.Err(); err != nil {
 		log.Fatal("ERROR: Undefined row err: ", err.Error())
 	}
 
-	return runners
+	return runs
 }
 
 // Get runner info by id
 // Return:
-// - Runner if succes
-// - Runner with id < 0 elsewhere
-func (db *Database) GetRunner(runner_id int) Runner {
+// - Run if succes
+// - Run with id < 0 elsewhere
+func (db *Database) GetRun(run_id int) Run {
 
 	var id int
 	var status string
+	var runner_id int
+	var repo string
+	var logs string
 	// Execute the query
-	req := "SELECT * FROM runner WHERE runner.id='" + strconv.Itoa(runner_id) + "'"
-	err := db.conn.QueryRow(req).Scan(&id, &status)
+	req := "SELECT * FROM run WHERE run.id='" + strconv.Itoa(run_id) + "'"
+	err := db.conn.QueryRow(req).Scan(&id, &status, &runner_id, &repo, &logs)
 	if err != nil {
-		log.Print("ERROR: Unable to select runner: ", err.Error())
-		return Runner{-1, "error"}
+		log.Print("ERROR: Unable to select run: ", err.Error())
+		return Run{-1, "", 0, "", ""}
 	}
 
-	return Runner{id, status}
+	return Run{id, status, runner_id, repo, logs}
 }
