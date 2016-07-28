@@ -50,6 +50,9 @@ create table batch
 (
 	id		serial		not null,
 	namespace	varchar(64)	not null,
+	init_script	text		not null,
+	update_time	int		not null,
+	timeout		int		not null,
 	primary key (id),
 	foreign key(namespace) references namespace(name)
 );
@@ -58,7 +61,7 @@ create table batch_runs
 (
 	id		serial		not null,
 	batch		bigint unsigned	not null,
-	run		bigint unsigned	not null,
+	run		bigint unsigned	not null unique,
 	primary key (id),
 	foreign key(batch) references batch(id),
 	foreign key(run) references run(id)

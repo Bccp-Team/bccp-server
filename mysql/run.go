@@ -52,7 +52,7 @@ func (db *Database) ListRuns() ([]Run, error) {
 }
 
 // Get runner info by id
-func (db *Database) GetRun(run_id int) (Run, error) {
+func (db *Database) GetRun(run_id int) (*Run, error) {
 
 	var id int
 	var status string
@@ -64,10 +64,10 @@ func (db *Database) GetRun(run_id int) (Run, error) {
 	err := db.conn.QueryRow(req).Scan(&id, &status, &runner_id, &repo, &logs)
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
-		return Run{-1, "", 0, "", ""}, err
+		return nil, err
 	}
 
-	return Run{id, status, runner_id, repo, logs}, nil
+	return &Run{id, status, runner_id, repo, logs}, nil
 }
 
 // Launch run
@@ -124,7 +124,7 @@ func (db *Database) AddRun(depo string) (int, error) {
 
 	res, err := insert.Exec(depo)
 	if err != nil {
-		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		log.Print("ERROR: Unable to insert run: ", err.Error())
 		return -1, err
 	}
 	id, _ := res.LastInsertId()

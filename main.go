@@ -59,29 +59,21 @@ func main() {
 
 	// Mysql tests
 	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
-	mysql.Db.AddNamespace("lol")
-	mysql.Db.AddRepoToNamespace("lol", "bite/lol")
-	mysql.Db.AddRepoToNamespace("lol", "bite/lel")
-	mysql.Db.AddRepoToNamespace("lol", "bite/couille")
-	mysql.Db.DeleteRepoFromNamespace("lol", "bite/couille")
-	mysql.Db.AddNamespace("lo")
-	mysql.Db.AddRepoToNamespace("lo", "bite/couille")
-	mysql.Db.AddRepoToNamespace("lo", "bite/couille")
+
+	mysql.Db.AddNamespace("tc1")
+	mysql.Db.AddNamespace("tc2")
+	mysql.Db.AddBatch("tc1", "#!", 10, 120)
+	mysql.Db.AddBatch("tc2", "#!", 10, 120)
+
 	println("-----------")
 	ns, _ := mysql.Db.ListNamespaces()
 	for _, n := range ns {
 		println("(", n, ")")
 	}
 	println("-----------")
-	mysql.Db.DeleteNamespace("lo")
-	ns, _ = mysql.Db.ListNamespaces()
-	for _, n := range ns {
-		println("(", n, ")")
-	}
-	println("-----------")
-	repos, _ := mysql.Db.GetNamespaceRepos("lol")
-	for _, n := range repos {
-		println("(", n, ")")
+	batchs := mysql.Db.ListBatchs()
+	for _, n := range batchs {
+		println("(", n.Id, n.Namespace, n.Init_script, n.Update_time, n.Timeout, ")")
 	}
 	println("-----------")
 

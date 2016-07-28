@@ -109,7 +109,7 @@ func (db *Database) UpdateRunner(id int, state string) error {
 
 	_, err = update.Exec()
 	if err != nil {
-		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		log.Print("ERROR: Unable to update runner: ", err.Error())
 		return err
 	}
 

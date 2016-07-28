@@ -10,14 +10,14 @@ func (db *Database) AddRepoToNamespace(namespace string, repo string) (int, erro
 	req := "INSERT INTO namespace_repos VALUES(NULL,?,?)"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
-		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
+		log.Print("ERROR: Unable to prepare add namespace_repo: ", err.Error())
 		return -1, err
 	}
 	defer insert.Close()
 
 	res, err := insert.Exec(namespace, repo)
 	if err != nil {
-		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		log.Print("ERROR: Unable to insert namespace_repo: ", err.Error())
 		return -1, err
 	}
 	id, _ := res.LastInsertId()
@@ -28,14 +28,14 @@ func (db *Database) DeleteRepoFromNamespace(namespace string, repo string) error
 	req := "delete from namespace_repos where namespace=? and repo=?"
 	del, err := db.conn.Prepare(req)
 	if err != nil {
-		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
+		log.Print("ERROR: Unable to prepare add namespace_repo: ", err.Error())
 		return err
 	}
 	defer del.Close()
 
 	_, err = del.Exec(namespace, repo)
 	if err != nil {
-		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		log.Print("ERROR: Unable to delete namespace_repo: ", err.Error())
 		return err
 	}
 	return nil

@@ -49,7 +49,7 @@ func (db *Database) AddNamespace(namespace string) error {
 
 	_, err = insert.Exec(namespace)
 	if err != nil {
-		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		log.Print("ERROR: Unable to insert namespace: ", err.Error())
 		return err
 	}
 	return nil
