@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/bccp/api"
-	"github.com/bccp/mysql"
+	"github.com/bccp-server/api"
+	"github.com/bccp-server/mysql"
 )
 
 // Info from config file
