@@ -26,8 +26,3 @@ func PostEnableRunnerHandler(w http.ResponseWriter, r *http.Request) {
 func PostDisableRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello!\n"))
 }
-
-// Add runner
-func PutRunnerRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello!\n"))
-}
