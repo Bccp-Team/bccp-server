@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -50,11 +51,24 @@ func main() {
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
 	var db mysql.Database
 	db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
-	for _, r := range db.ListRuns() {
-		println("(", r.Id, " ", r.Status, " ", r.Runner_id, ")")
+	for _, r := range db.ListRunners() {
+		print("(", r.Id, ", ", r.Status, ", ")
+		fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
+			r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
+			r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
 	}
-	r := db.GetRun(1)
-	println("(", r.Id, " ", r.Status, " ", r.Runner_id, ")")
-	println(db.AddRunner())
+	r := db.GetRunner(1)
+	print("(", r.Id, ", ", r.Status, ", ")
+	fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
+		r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
+		r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
+
+	println(db.AddRunner("91.121.83.195"))
+	for _, r := range db.ListRunners() {
+		print("(", r.Id, ", ", r.Status, ", ")
+		fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
+			r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
+			r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
+	}
 	wait.Wait()
 }
