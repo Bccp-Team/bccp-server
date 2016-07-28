@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"sync"
@@ -24,8 +25,7 @@ type Config struct {
 }
 
 // Reads info from config file
-func ReadConfig() Config {
-	var configfile = "/etc/bccp/bccp.conf"
+func ReadConfig(configfile string) Config {
 	_, err := os.Stat(configfile)
 	if err != nil {
 		log.Fatal("Config file is missing: ", configfile)
@@ -39,7 +39,12 @@ func ReadConfig() Config {
 }
 
 func main() {
-	var config = ReadConfig()
+	var configPath string
+
+	flag.StringVar(&configPath, "config", "/etc/bccp/bccp.conf", "config path")
+	flag.Parse()
+
+	var config = ReadConfig(configPath)
 	var wait sync.WaitGroup
 	go runners.WaitRunners(config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
