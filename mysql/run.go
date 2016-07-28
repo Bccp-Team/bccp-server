@@ -1,7 +1,6 @@
 package mysql
 
 import (
-	"database/sql"
 	"log"
 	"strconv"
 
@@ -16,29 +15,19 @@ type Run struct {
 	Logs      string
 }
 
-func (db *Database) ListRuns() []Run {
+// List Runs
+func (db *Database) ListRuns() ([]Run, error) {
 
+	var id int
+	var status string
+	var runner_id int
+	var repo string
+	var logs string
 	// Execute the query
 	rows, err := db.conn.Query("SELECT * FROM run")
 	if err != nil {
-		log.Fatal("ERROR: Unable to select run: ", err.Error())
-	}
-
-	// Get column names
-	columns, err := rows.Columns()
-	if err != nil {
-		log.Fatal("ERROR: Unable to get columns: ", err.Error())
-	}
-
-	// Make a slice for the values
-	values := make([]sql.RawBytes, len(columns))
-
-	// rows.Scan wants '[]interface{}' as an argument, so we must copy the
-	// references into such a slice
-	// See http://code.google.com/p/go-wiki/wiki/InterfaceSlice for details
-	scanArgs := make([]interface{}, len(values))
-	for i := range values {
-		scanArgs[i] = &values[i]
+		log.Print("ERROR: Unable to select run: ", err.Error())
+		return nil, err
 	}
 
 	var runs []Run
@@ -46,37 +35,24 @@ func (db *Database) ListRuns() []Run {
 	// Fetch rows
 	for rows.Next() {
 		// get RawBytes from data
-		err = rows.Scan(scanArgs...)
+		err = rows.Scan(&id, &status, &runner_id, &repo, &logs)
 		if err != nil {
-			log.Fatal("ERROR: Unable to get next row: ", err.Error())
+			log.Print("ERROR: Unable to get next row: ", err.Error())
+			return nil, err
 		}
 
-		// Now fetch the data.
-		id, err := strconv.Atoi(string(values[0]))
-		if err != nil {
-			log.Fatal("ERROR: Run id conversion error: ", err.Error())
-		}
-		status := string(values[1])
-		runner_id, err := strconv.Atoi(string(values[2]))
-		if err != nil {
-			log.Fatal("ERROR: Runner id conversion error: ", err.Error())
-		}
-		repo := string(values[3])
-		logs := string(values[4])
 		runs = append(runs, Run{id, status, runner_id, repo, logs})
 	}
 	if err = rows.Err(); err != nil {
-		log.Fatal("ERROR: Undefined row err: ", err.Error())
+		log.Print("ERROR: Undefined row err: ", err.Error())
+		return runs, err
 	}
 
-	return runs
+	return runs, nil
 }
 
 // Get runner info by id
-// Return:
-// - Run if succes
-// - Run with id < 0 elsewhere
-func (db *Database) GetRun(run_id int) Run {
+func (db *Database) GetRun(run_id int) (Run, error) {
 
 	var id int
 	var status string
@@ -88,10 +64,97 @@ func (db *Database) GetRun(run_id int) Run {
 	err := db.conn.QueryRow(req).Scan(&id, &status, &runner_id, &repo, &logs)
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
-		return Run{-1, "", 0, "", ""}
+		return Run{-1, "", 0, "", ""}, err
 	}
 
-	return Run{id, status, runner_id, repo, logs}
+	return Run{id, status, runner_id, repo, logs}, nil
+}
+
+// Add run
+func (db *Database) AddRun(repo string) (int, error) {
+
+	// Prepare statement for inserting data
+	req := "INSERT INTO run VALUES(NULL,'waiting',-1,'" + repo + "', '')"
+	insert, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare add run: ", err.Error())
+		return -1, err
+	}
+	defer insert.Close()
+
+	res, err := insert.Exec()
+	if err != nil {
+		log.Print("ERROR: Unable to insert run: ", err.Error())
+		return -1, err
+	}
+
+	id, _ := res.LastInsertId()
+	return int(id), nil
+}
+
+// Launch run
+func (db *Database) LaunchRun(id int, runner int) error {
+
+	// Prepare statement for inserting data
+	req := "update run set status='running', runner=" + strconv.Itoa(runner)
+	req += " where id=" + strconv.Itoa(id)
+	update, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare: ", err.Error())
+		return err
+	}
+	defer update.Close()
+
+	_, err = update.Exec()
+	if err != nil {
+		log.Print("ERROR: Unable to update run: ", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Update
+func (db *Database) UpdateRunStatus(id int, state string) error {
+
+	// Prepare statement for inserting data
+	req := "update run set status='" + state + "' where id=" + strconv.Itoa(id)
+	update, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare: ", err.Error())
+		return err
+	}
+	defer update.Close()
+
+	_, err = update.Exec()
+	if err != nil {
+		log.Print("ERROR: Unable to update status: ", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Add Logs
+func (db *Database) UpdateRunLogs(id int, logs string) error {
+
+	// Prepare statement for inserting data
+	req := "update run set log=concat(logs, '" + logs + "') where id="
+	req += strconv.Itoa(id)
+	update, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare: ", err.Error())
+		return err
+	}
+	defer update.Close()
+
+	_, err = update.Exec()
+	if err != nil {
+		log.Print("ERROR: Unable to update logs: ", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (db *Database) AddRun(depo string) (int, error) {
