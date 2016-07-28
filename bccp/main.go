@@ -8,6 +8,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/bccp-server/api"
 	"github.com/bccp-server/mysql"
+	"github.com/bccp-server/runners"
 )
 
 // Info from config file
@@ -40,7 +41,7 @@ func ReadConfig() Config {
 func main() {
 	var config = ReadConfig()
 	var wait sync.WaitGroup
-	go WaitRunners(config.Runner_port, config.Runner_token)
+	go runners.WaitRunners(config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
 	var db mysql.Database
 	db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
