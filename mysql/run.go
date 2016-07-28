@@ -135,28 +135,6 @@ func (db *Database) UpdateRunStatus(id int, state string) error {
 	return nil
 }
 
-// Add Logs
-func (db *Database) UpdateRunLogs(id int, logs string) error {
-
-	// Prepare statement for inserting data
-	req := "update run set log=concat(logs, '" + logs + "') where id="
-	req += strconv.Itoa(id)
-	update, err := db.conn.Prepare(req)
-	if err != nil {
-		log.Print("ERROR: Unable to prepare: ", err.Error())
-		return err
-	}
-	defer update.Close()
-
-	_, err = update.Exec()
-	if err != nil {
-		log.Print("ERROR: Unable to update logs: ", err.Error())
-		return err
-	}
-
-	return nil
-}
-
 func (db *Database) AddRun(depo string) (int, error) {
 	req := "INSERT INTO run VALUES(NULL,'waiting',-1,?, '')"
 	insert, err := db.conn.Prepare(req)
