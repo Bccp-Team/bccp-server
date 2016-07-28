@@ -12,6 +12,8 @@ import (
 // Info from config file
 type Config struct {
 	Port           string
+	Runner_port    string
+	Runner_token   string
 	Key_file       string
 	Crt_file       string
 	Mysql_database string
@@ -37,7 +39,7 @@ func ReadConfig() Config {
 func main() {
 	var config = ReadConfig()
 	var wait sync.WaitGroup
-	go WaitRunners()
+	go WaitRunners(config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
 	wait.Wait()
 }

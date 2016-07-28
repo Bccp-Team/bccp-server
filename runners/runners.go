@@ -2,24 +2,16 @@ package runners
 
 import (
 	"encoding/gob"
-	"flag"
 	"log"
 	"net"
 	"sync"
 )
 
-var runnerService string
-var runnerToken string
-
 var runnerMaps map[uint]*clientInfo
 
-func WaitRunners() {
-	flag.StringVar(&runnerService, "runner-service", "127.0.0.1:4243", "the runner service")
-	flag.StringVar(&runnerToken, "runner-token", "bccp", "the runner token")
+func WaitRunners(service string, token string) {
 
-	flag.Parse()
-
-	tcpAddr, err := net.ResolveTCPAddr("tcp", runnerService)
+	tcpAddr, err := net.ResolveTCPAddr("tcp", service)
 
 	if err != nil {
 		log.Panic(err)
@@ -40,7 +32,7 @@ func WaitRunners() {
 			continue
 		}
 
-		go handleClient(conn)
+		go handleClient(conn, &token)
 	}
 }
 
@@ -53,7 +45,7 @@ type clientInfo struct {
 	decoder    *gob.Decoder
 }
 
-func handleClient(conn net.Conn) {
+func handleClient(conn net.Conn, token *string) {
 	defer conn.Close()
 	encoder := gob.NewEncoder(conn)
 	decoder := gob.NewDecoder(conn)
@@ -66,7 +58,7 @@ func handleClient(conn net.Conn) {
 		return
 	}
 
-	if connection.Token != runnerToken {
+	if connection.Token != *token {
 		log.Printf("bad token receive: %v", connection.Token)
 		return
 	}
