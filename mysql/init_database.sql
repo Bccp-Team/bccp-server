@@ -11,7 +11,7 @@ create table runner
 (
 	id		serial,
 	status		varchar(16)	not null default 'waiting'
-					check (status in ('waiting', 'running', 'dead')),
+					check (status in ('waiting', 'running', 'paused', 'dead')),
 	last_conn	timestamp	default current_timestamp
 					on update current_timestamp,
 	ip		varchar(16)	not null,

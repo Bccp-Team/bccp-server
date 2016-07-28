@@ -117,7 +117,8 @@ func handleClient(conn net.Conn, token *string) {
 	}
 }
 
-func KillRun() {
+//FIXME: we should take the runner and the run as parameter
+func KillRun(uid int) {
 	//FIXME
 }
 

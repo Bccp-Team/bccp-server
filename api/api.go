@@ -21,7 +21,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crt_file string, key_file s
 	// Define routes
 	get_api.HandleFunc("/runner", GetRunnerHandler)
 	get_api.HandleFunc("/runner/{id:[0-9]+}", GetRunnerByIdHandler)
-	del_api.HandleFunc("/runner", DeleteRunnerHandler)
+	del_api.HandleFunc("/runner/{id:[0-9]+}", DeleteRunnerHandler)
 	pst_api.HandleFunc("/runner/{id:[0-9]+/enable}", PostEnableRunnerHandler)
 	pst_api.HandleFunc("/runner/{id:[0-9]+/disable}", PostDisableRunnerHandler)
 
@@ -46,7 +46,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crt_file string, key_file s
 		http.Handle("/", r)
 		log.Print("INFO: Launching http server with crt: '" + crt_file + "'")
 		log.Print("      and key: '" + key_file + "'")
-		err = http.ListenAndServeTLS(":"+port, crt_file, key_file, nil)
+		err = http.ListenAndServe(":"+port, nil)
 		defer (*wait).Done()
 	}()
 	time.Sleep(1 * time.Second)
