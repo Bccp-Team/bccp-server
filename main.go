@@ -7,9 +7,11 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
+
 	"github.com/bccp-server/api"
 	"github.com/bccp-server/mysql"
 	"github.com/bccp-server/runners"
+	"github.com/bccp-server/scheduler"
 )
 
 // Info from config file
@@ -46,7 +48,8 @@ func main() {
 
 	var config = ReadConfig(configPath)
 	var wait sync.WaitGroup
-	go runners.WaitRunners(config.Runner_port, config.Runner_token)
+	go scheduler.DefaultScheduler.Start()
+	go runners.WaitRunners(&scheduler.DefaultScheduler, config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
 
 	// Mysql tests

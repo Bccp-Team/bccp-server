@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bccp-server/ischeduler"
 	"github.com/bccp-server/mysql"
 )
 
@@ -14,9 +15,10 @@ var (
 	runnerService string
 	runnerToken   string
 	runnerMaps    map[int]*clientInfo
+	sched         ischeduler.IScheduler
 )
 
-func WaitRunners(service string, token string) {
+func WaitRunners(sched ischeduler.IScheduler, service string, token string) {
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", service)
 
@@ -82,12 +84,14 @@ func handleClient(conn net.Conn, token *string) {
 
 	if err != nil {
 		log.Printf(err.Error())
+		mysql.Db.UpdateRunner(uid, "dead")
 		return
 	}
 
 	client := &clientInfo{uid: uid, conn: conn, encoder: encoder, decoder: decoder}
 
 	runnerMaps[uid] = client
+	sched.AddRunner(uid)
 
 	for {
 		var clientReq ClientRequest
