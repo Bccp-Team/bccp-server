@@ -15,7 +15,7 @@ type SubscribeRequest struct {
 }
 
 type SubscribeAnswer struct {
-	ClientUID uint
+	ClientUID int
 }
 
 type ClientRequest struct {

@@ -49,24 +49,23 @@ func main() {
 	var wait sync.WaitGroup
 	go runners.WaitRunners(config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
-	var db mysql.Database
-	db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
-	for _, r := range db.ListRunners() {
+	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
+	for _, r := range mysql.Db.ListRunners() {
 		print("(", r.Id, ", ", r.Status, ", ")
 		fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
 			r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
 			r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
 	}
-	r := db.GetRunner(1)
+	r, _ := mysql.Db.GetRunner(1)
 	print("(", r.Id, ", ", r.Status, ", ")
 	fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
 		r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
 		r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
 
-	id := db.AddRunner("91.121.83.195")
+	id, _ := mysql.Db.AddRunner("91.121.83.195")
 	println(id)
-	println(db.UpdateRunner(id, "running"))
-	for _, r := range db.ListRunners() {
+	println(mysql.Db.UpdateRunner(id, "running"))
+	for _, r := range mysql.Db.ListRunners() {
 		print("(", r.Id, ", ", r.Status, ", ")
 		fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
 			r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),

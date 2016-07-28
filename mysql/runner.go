@@ -50,7 +50,7 @@ func (db *Database) ListRunners() []Runner {
 // Return:
 // - Runner if succes
 // - Runner with id < 0 elsewhere
-func (db *Database) GetRunner(runner_id int) Runner {
+func (db *Database) GetRunner(runner_id int) (*Runner, error) {
 
 	var id int
 	var status string
@@ -61,57 +61,57 @@ func (db *Database) GetRunner(runner_id int) Runner {
 	err := db.conn.QueryRow(req).Scan(&id, &status, &last_connection, &ip)
 	if err != nil {
 		log.Print("ERROR: Unable to select runner: ", err.Error())
-		return Runner{-1, "", time.Time{}, ""}
+		return nil, err
 	}
 
-	return Runner{id, status, last_connection, ip}
+	return &Runner{id, status, last_connection, ip}, nil
 }
 
 // Add runner
 // Return:
 // - Runner id if succes
 // - -1 elsewhere
-func (db *Database) AddRunner(ip string) int {
+func (db *Database) AddRunner(ip string) (int, error) {
 
 	// Prepare statement for inserting data
 	req := "INSERT INTO runner VALUES(NULL,'waiting',NULL,'" + ip + "')"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
-		return -1
+		return -1, err
 	}
 	defer insert.Close()
 
 	res, err := insert.Exec()
 	if err != nil {
 		log.Print("ERROR: Unable to insert runner: ", err.Error())
-		return -1
+		return -1, err
 	}
 
 	id, _ := res.LastInsertId()
-	return int(id)
+	return int(id), nil
 }
 
 // Add runner
 // Return:
 // - Runner id if succes
 // - -1 elsewhere
-func (db *Database) UpdateRunner(id int, state string) int {
+func (db *Database) UpdateRunner(id int, state string) error {
 
 	// Prepare statement for inserting data
 	req := "update runner set status='" + state + "' where id=" + strconv.Itoa(id)
 	update, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
-		return -1
+		return err
 	}
 	defer update.Close()
 
 	_, err = update.Exec()
 	if err != nil {
 		log.Print("ERROR: Unable to insert runner: ", err.Error())
-		return -1
+		return err
 	}
 
-	return 0
+	return nil
 }

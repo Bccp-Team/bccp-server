@@ -5,12 +5,14 @@ import (
 	"log"
 	"net"
 	"sync"
+
+	"github.com/bccp-server/mysql"
 )
 
 var (
 	runnerService string
 	runnerToken   string
-	runnerMaps    map[uint]*clientInfo
+	runnerMaps    map[int]*clientInfo
 )
 
 func WaitRunners(service string, token string) {
@@ -41,7 +43,7 @@ func WaitRunners(service string, token string) {
 }
 
 type clientInfo struct {
-	uid        uint
+	uid        int
 	currentRun uint
 	conn       net.Conn
 	mut        sync.Mutex
@@ -67,8 +69,12 @@ func handleClient(conn net.Conn, token *string) {
 		return
 	}
 
-	//FIXME: generate ClientUid
-	var uid uint = 0
+	uid, err := mysql.Db.AddRunner(conn.RemoteAddr().String())
+
+	if err != nil {
+		//FIXME error
+	}
+
 	answer := SubscribeAnswer{ClientUID: uid}
 
 	err = encoder.Encode(&answer)
@@ -104,15 +110,19 @@ func handleClient(conn net.Conn, token *string) {
 	}
 }
 
-func ack(uid uint) {
-	log.Printf("Ack from %u", uid)
+func ack(uid int) {
+	r, err := mysql.Db.GetRunner(uid)
+	if err != nil {
+		//FIXME error
+	}
+	mysql.Db.UpdateRunner(r.Id, r.Status)
 }
 
-func finish(uid uint, returnValue int) {
-	log.Printf("Finish from %u, %d", uid, returnValue)
+func finish(uid int, returnValue int) {
+	log.Printf("Finish from %d, %d", uid, returnValue)
 }
 
-func logs(uid uint, logs []string) {
+func logs(uid int, logs []string) {
 	log.Printf("Logs from %u\n")
 	for i := 0; i < len(logs); i = i + 1 {
 		log.Printf(logs[i])
