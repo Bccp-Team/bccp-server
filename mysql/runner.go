@@ -81,3 +81,27 @@ func (db *Database) GetRunner(runner_id int) Runner {
 
 	return Runner{id, status}
 }
+
+// Add runner
+// Return:
+// - Runner id if succes
+// - -1 elsewhere
+func (db *Database) AddRunner() int64 {
+
+	// Prepare statement for inserting data
+	insert, err := db.conn.Prepare("INSERT INTO runner VALUES( NULL,'waiting' )")
+	if err != nil {
+		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
+		return -1
+	}
+	defer insert.Close()
+
+	res, err := insert.Exec()
+	if err != nil {
+		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		return -1
+	}
+
+	id, _ := res.LastInsertId()
+	return id
+}

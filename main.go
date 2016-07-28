@@ -55,5 +55,6 @@ func main() {
 	}
 	r := db.GetRun(1)
 	println("(", r.Id, " ", r.Status, " ", r.Runner_id, ")")
+	println(db.AddRunner())
 	wait.Wait()
 }
