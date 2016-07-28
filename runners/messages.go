@@ -35,7 +35,7 @@ type RunRequest struct {
 	Init       string
 	Repo       string
 	Name       string
-	JobId      uint
+	JobId      int
 	UpdateTime uint
 	Timeout    uint
 }

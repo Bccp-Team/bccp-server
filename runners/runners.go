@@ -111,6 +111,63 @@ func handleClient(conn net.Conn, token *string) {
 	}
 }
 
+func KillRun() {
+	//FIXME
+}
+
+func StartRun(uid, jobId int) error {
+	runner, ok := runnerMaps[uid]
+
+	if !ok {
+		//FIXME error
+	}
+
+	run, err := mysql.Db.GetRun(jobId)
+
+	if err != nil {
+		//FIXME error
+	}
+
+	//FIXME: retreive Name, Repo, UpdateTime and Timeout
+	runReq := &RunRequest{Init: "ls; sleep 5; echo toto", Repo: run.Repo,
+		Name: "toto", JobId: jobId, UpdateTime: 1, Timeout: 60}
+	servReq := &ServerRequest{Kind: Run, Run: runReq}
+
+	go func() {
+		err := runner.encoder.Encode(servReq)
+
+		if err != nil {
+			//FIXME error
+			return
+		}
+
+		mysql.Db.LaunchRun(jobId, uid)
+		mysql.Db.UpdateRunner(uid, "running")
+	}()
+
+	return nil
+}
+
+func PingRunner(uid int) error {
+	runner, ok := runnerMaps[uid]
+
+	if !ok {
+		//FIXME error
+	}
+
+	servReq := &ServerRequest{Kind: Ping, Run: nil}
+
+	go func() {
+		err := runner.encoder.Encode(servReq)
+		if err != nil {
+			//FIXME error
+			return
+		}
+	}()
+
+	return nil
+}
+
 func ack(uid int) {
 	r, err := mysql.Db.GetRunner(uid)
 	if err != nil {
