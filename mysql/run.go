@@ -70,6 +70,28 @@ func (db *Database) GetRun(run_id int) (Run, error) {
 	return Run{id, status, runner_id, repo, logs}, nil
 }
 
+// Add run
+func (db *Database) AddRun(repo string) (int, error) {
+
+	// Prepare statement for inserting data
+	req := "INSERT INTO run VALUES(NULL,'waiting',-1,'" + repo + "', '')"
+	insert, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare add run: ", err.Error())
+		return -1, err
+	}
+	defer insert.Close()
+
+	res, err := insert.Exec()
+	if err != nil {
+		log.Print("ERROR: Unable to insert run: ", err.Error())
+		return -1, err
+	}
+
+	id, _ := res.LastInsertId()
+	return int(id), nil
+}
+
 // Launch run
 func (db *Database) LaunchRun(id int, runner int) error {
 
@@ -139,13 +161,13 @@ func (db *Database) UpdateRunLogs(run_id int, new_logs string) error {
 	defer update.Close()
 
 	if err != nil {
-		//FIXME error
+		log.Print("ERROR: Unable to prepare update logs: ", err.Error())
 		return err
 	}
 
 	_, err = update.Exec(new_logs)
 	if err != nil {
-		//FIXME error
+		log.Print("ERROR: Unable to update logs: ", err.Error())
 		return err
 	}
 
