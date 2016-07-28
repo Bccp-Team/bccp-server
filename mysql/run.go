@@ -94,9 +94,27 @@ func (db *Database) GetRun(run_id int) Run {
 	return Run{id, status, runner_id, repo, logs}
 }
 
+func (db *Database) AddRun(depo string) (int, error) {
+	req := "INSERT INTO run VALUES(NULL,'waiting',-1,?, '')"
+	insert, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
+		return -1, err
+	}
+	defer insert.Close()
+
+	res, err := insert.Exec(depo)
+	if err != nil {
+		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		return -1, err
+	}
+	id, _ := res.LastInsertId()
+	return int(id), nil
+}
+
 func (db *Database) UpdateRunLogs(run_id int, new_logs string) error {
 
-	req := "UPDATE run SET logs=concat(logs, '?') WHERE run.id='" + strconv.Itoa(run_id) + "'"
+	req := "UPDATE run SET logs=concat(logs, ?) WHERE run.id='" + strconv.Itoa(run_id) + "'"
 
 	update, err := db.conn.Prepare(req)
 	defer update.Close()

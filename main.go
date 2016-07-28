@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -50,26 +49,6 @@ func main() {
 	go runners.WaitRunners(config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
 	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
-	for _, r := range mysql.Db.ListRunners() {
-		print("(", r.Id, ", ", r.Status, ", ")
-		fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
-			r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
-			r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
-	}
-	r, _ := mysql.Db.GetRunner(1)
-	print("(", r.Id, ", ", r.Status, ", ")
-	fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
-		r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
-		r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
-
-	id, _ := mysql.Db.AddRunner("91.121.83.195")
-	println(id)
-	println(mysql.Db.UpdateRunner(id, "running"))
-	for _, r := range mysql.Db.ListRunners() {
-		print("(", r.Id, ", ", r.Status, ", ")
-		fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
-			r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
-			r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
-	}
-	wait.Wait()
+	id, _ := mysql.Db.AddRun("test")
+	mysql.Db.UpdateRunLogs(id, "foobarnaz\n")
 }

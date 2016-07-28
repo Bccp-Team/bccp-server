@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	Db *Database
+	Db Database
 )
 
 type Database struct {
