@@ -93,3 +93,24 @@ func (db *Database) GetRun(run_id int) Run {
 
 	return Run{id, status, runner_id, repo, logs}
 }
+
+func (db *Database) UpdateRunLogs(run_id int, new_logs string) error {
+
+	req := "UPDATE run SET logs=concat(logs, '?') WHERE run.id='" + strconv.Itoa(run_id) + "'"
+
+	update, err := db.conn.Prepare(req)
+	defer update.Close()
+
+	if err != nil {
+		//FIXME error
+		return err
+	}
+
+	_, err = update.Exec(new_logs)
+	if err != nil {
+		//FIXME error
+		return err
+	}
+
+	return nil
+}

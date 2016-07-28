@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"log"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/bccp-server/mysql"
@@ -123,8 +124,8 @@ func finish(uid int, returnValue int) {
 }
 
 func logs(uid int, logs []string) {
-	log.Printf("Logs from %u\n")
-	for i := 0; i < len(logs); i = i + 1 {
-		log.Printf(logs[i])
+	err := mysql.Db.UpdateRunLogs(uid, strings.Join(logs, ""))
+	if err != nil {
+		//FIXME error
 	}
 }
