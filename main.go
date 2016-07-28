@@ -48,7 +48,21 @@ func main() {
 	var wait sync.WaitGroup
 	go runners.WaitRunners(config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
+
+	// Mysql tests
 	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
 	id, _ := mysql.Db.AddRun("test")
-	mysql.Db.UpdateRunLogs(id, "foobarnaz\n")
+	mysql.Db.LaunchRun(id, 1)
+	mysql.Db.UpdateRunStatus(id, "timeout")
+	mysql.Db.UpdateRunLogs(id, "lol")
+	mysql.Db.UpdateRunLogs(id, "lel")
+	mysql.Db.UpdateRunLogs(id, "lol")
+	id, _ = mysql.Db.AddRun("bite")
+	id, _ = mysql.Db.AddRun("poil")
+	runs, _ := mysql.Db.ListRuns()
+	for _, run := range runs {
+		println("(", run.Id, run.Status, run.Runner_id, run.Repo, run.Logs, ")")
+	}
+
+	wait.Wait()
 }
