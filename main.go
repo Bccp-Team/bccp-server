@@ -48,9 +48,14 @@ func main() {
 
 	var config = ReadConfig(configPath)
 	var wait sync.WaitGroup
+	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
 	go scheduler.DefaultScheduler.Start()
 	go runners.WaitRunners(&scheduler.DefaultScheduler, config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
+
+	id, _ := mysql.Db.AddRun("foobarbaz")
+
+	scheduler.DefaultScheduler.AddRun(id)
 
 	// Mysql tests
 	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)

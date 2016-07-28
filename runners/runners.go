@@ -12,13 +12,15 @@ import (
 )
 
 var (
-	runnerService string
-	runnerToken   string
-	runnerMaps    map[int]*clientInfo
-	sched         ischeduler.IScheduler
+	runnerMaps map[int]*clientInfo
+	sched      ischeduler.IScheduler
 )
 
-func WaitRunners(sched ischeduler.IScheduler, service string, token string) {
+func WaitRunners(isched ischeduler.IScheduler, service string, token string) {
+
+	runnerMaps = make(map[int]*clientInfo)
+	sched = isched
+	log.Printf(service)
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", service)
 
