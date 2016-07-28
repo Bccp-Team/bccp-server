@@ -19,11 +19,11 @@ type SubscribeAnswer struct {
 }
 
 type ClientRequest struct {
-	Kind        int
-	JobId       uint
-	Logs        []string
-	Message     string
-	ReturnValue int
+	Kind    int
+	JobId   uint
+	Logs    []string
+	Message string
+	Status  string
 }
 
 type ServerRequest struct {

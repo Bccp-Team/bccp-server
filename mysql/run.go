@@ -173,3 +173,45 @@ func (db *Database) UpdateRunLogs(run_id int, new_logs string) error {
 
 	return nil
 }
+
+func (db *Database) UpdateRunStatus(run_id int, status string) error {
+
+	req := "UPDATE run SET status=? WHERE run.id='" + strconv.Itoa(run_id) + "'"
+
+	update, err := db.conn.Prepare(req)
+	defer update.Close()
+
+	if err != nil {
+		//FIXME error
+		return err
+	}
+
+	_, err = update.Exec(status)
+	if err != nil {
+		//FIXME error
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) UpdateRunRunner(run_id int, id int) error {
+
+	req := "UPDATE run SET runner=? WHERE run.id='" + strconv.Itoa(run_id) + "'"
+
+	update, err := db.conn.Prepare(req)
+	defer update.Close()
+
+	if err != nil {
+		//FIXME error
+		return err
+	}
+
+	_, err = update.Exec(id)
+	if err != nil {
+		//FIXME error
+		return err
+	}
+
+	return nil
+}

@@ -102,7 +102,7 @@ func handleClient(conn net.Conn, token *string) {
 		case Ack:
 			ack(uid)
 		case Finish:
-			finish(uid, clientReq.ReturnValue)
+			finish(uid, clientReq.Status)
 		case Logs:
 			logs(uid, clientReq.Logs)
 		case Error:
@@ -119,8 +119,11 @@ func ack(uid int) {
 	mysql.Db.UpdateRunner(r.Id, r.Status)
 }
 
-func finish(uid int, returnValue int) {
-	log.Printf("Finish from %d, %d", uid, returnValue)
+func finish(uid int, status string) {
+	err := mysql.Db.UpdateRunStatus(uid, status)
+	if err != nil {
+		//FIXME error
+	}
 }
 
 func logs(uid int, logs []string) {
