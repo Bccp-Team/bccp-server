@@ -1,4 +1,6 @@
 GOPATH_PREFIX=github.com
+MYSQL_PKG=${GOPATH_PREFIX}/bccp/mysql
+RUNNERS_PKG=${GOPATH_PREFIX}/bccp/runners
 API_PKG=${GOPATH_PREFIX}/bccp/api
 MAIN_PKG=${GOPATH_PREFIX}/bccp/bccp
 

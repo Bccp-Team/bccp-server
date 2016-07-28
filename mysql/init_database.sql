@@ -10,9 +10,6 @@ create table runner
 	id					serial,
 	status			varchar(16)		not null default 'waiting'
 													check (status in ('waiting', 'running', 'dead')),
-	api_token		varchar(64)		not null,
-	ci_token		varchar(64)		not null,
-	ip					varchar(64)		not null,
 	primary key (id)
 );
 

@@ -7,6 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/bccp/api"
+	"github.com/bccp/mysql"
 )
 
 // Info from config file
@@ -41,5 +42,12 @@ func main() {
 	var wait sync.WaitGroup
 	go WaitRunners(config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
+	var db mysql.Database
+	db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
+	for _, r := range db.ListRunners() {
+		println("(", r.Id, " ", r.Status, ")")
+	}
+	r := db.GetRunner(1)
+	println("(", r.Id, " ", r.Status, ")")
 	wait.Wait()
 }
