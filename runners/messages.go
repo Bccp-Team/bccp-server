@@ -20,7 +20,7 @@ type SubscribeAnswer struct {
 
 type ClientRequest struct {
 	Kind    int
-	JobId   uint
+	JobId   int
 	Logs    []string
 	Message string
 	Status  string
