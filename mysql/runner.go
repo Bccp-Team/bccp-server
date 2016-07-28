@@ -71,7 +71,7 @@ func (db *Database) GetRunner(runner_id int) Runner {
 // Return:
 // - Runner id if succes
 // - -1 elsewhere
-func (db *Database) AddRunner(ip string) int64 {
+func (db *Database) AddRunner(ip string) int {
 
 	// Prepare statement for inserting data
 	req := "INSERT INTO runner VALUES(NULL,'waiting',NULL,'" + ip + "')"
@@ -89,5 +89,29 @@ func (db *Database) AddRunner(ip string) int64 {
 	}
 
 	id, _ := res.LastInsertId()
-	return id
+	return int(id)
+}
+
+// Add runner
+// Return:
+// - Runner id if succes
+// - -1 elsewhere
+func (db *Database) UpdateRunner(id int, state string) int {
+
+	// Prepare statement for inserting data
+	req := "update runner set status='" + state + "' where id=" + strconv.Itoa(id)
+	update, err := db.conn.Prepare(req)
+	if err != nil {
+		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
+		return -1
+	}
+	defer update.Close()
+
+	_, err = update.Exec()
+	if err != nil {
+		log.Print("ERROR: Unable to insert runner: ", err.Error())
+		return -1
+	}
+
+	return 0
 }

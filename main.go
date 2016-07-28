@@ -63,7 +63,9 @@ func main() {
 		r.Last_connection.Year(), r.Last_connection.Month(), r.Last_connection.Day(),
 		r.Last_connection.Hour(), r.Last_connection.Minute(), r.Last_connection.Second())
 
-	println(db.AddRunner("91.121.83.195"))
+	id := db.AddRunner("91.121.83.195")
+	println(id)
+	println(db.UpdateRunner(id, "running"))
 	for _, r := range db.ListRunners() {
 		print("(", r.Id, ", ", r.Status, ", ")
 		fmt.Printf("%d-%02d-%02d %02d:%02d:%02d )\n",
