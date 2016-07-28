@@ -27,42 +27,29 @@ CI API
 Runners:
 ------------
 
-For users:
- - GET /runner -> liste les runners
-    return: [ { runner_id: INT, current_run: run_id }, ... ]
-  - GET /runner/{id} -> get info sur un runner
-    return: { runner_ip: IP, current_run: run_id, runner_run: [ run_id1, ...] }
-  - DELETE /runners/{id} -> delete un runner
-  - POST /runner/{id}/enable -> reactive un runner
-  - POST /runner/{id}/disable -> pause un runner
-
-For runners:
-  - PUT /runner/register
-    parameters: 
-      - CI register token
-      - Runner API token
-    return: Runner CI API token
+	- GET /runner -> liste les runners
+		return: [ { runner_id: INT, current_run: run_id }, ... ]
+	- GET /runner/{id} -> get info sur un runner
+		return: { runner_ip: IP, current_run: run_id, runner_run: [ run_id1, ...] }
+	- DELETE /runners/{id} -> delete un runner
+	- POST /runner/{id}/enable -> reactive un runner
+	- POST /runner/{id}/disable -> pause un runner
 
 
 Run:
 ------
 
-For users:
-  - GET /run: (lourd)
-    return: [ { host: runner_id runner_state: STATE, repo: REPO, logs: INT}, ... ]
-  - GET /run/{id}:
-    return: [ { host: runner_id, runner_state: STATE, repo: REPO, logs: INT}, ... ]
-  - PUT /run: Run given repo with given run.sh
-    parameters:
-     - repo: [ "repo1", "repo2" ] / At least one
-     - repo: namespace_name \ must be defined
-     - run.sh: "#!"
-    return: batch_id
-  - DELETE /run/{id}
-
-For runners:
-  - POST /run/{id}/update -> update l'etat d'un job (exit, logs)
-    parameters: { state: RUN_STATE, logs: LOG_STRING }
+	- GET /run: (lourd)
+		return: [ { host: runner_id runner_state: STATE, repo: REPO, logs: INT}, ... ]
+	- GET /run/{id}:
+		return: [ { host: runner_id, runner_state: STATE, repo: REPO, logs: INT}, ... ]
+	- PUT /run: Run given repo with given run.sh
+		parameters:
+		 - repo: [ "repo1", "repo2" ] / At least one
+		 - repo: namespace_name \ must be defined
+		 - run.sh: "#!"
+		return: batch_id
+	- DELETE /run/{id}
 
 Batch:
 ---------
@@ -103,7 +90,7 @@ Runner API:
 
 Database:
 Runner:
-Runner_id | Status | Runner_API_token | Runner_CI_token
+Runner_id | Status
 
 Run:
 Run_id | Status | Runner | Repo | Logs
