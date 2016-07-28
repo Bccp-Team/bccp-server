@@ -70,28 +70,6 @@ func (db *Database) GetRun(run_id int) (Run, error) {
 	return Run{id, status, runner_id, repo, logs}, nil
 }
 
-// Add run
-func (db *Database) AddRun(repo string) (int, error) {
-
-	// Prepare statement for inserting data
-	req := "INSERT INTO run VALUES(NULL,'waiting',-1,'" + repo + "', '')"
-	insert, err := db.conn.Prepare(req)
-	if err != nil {
-		log.Print("ERROR: Unable to prepare add run: ", err.Error())
-		return -1, err
-	}
-	defer insert.Close()
-
-	res, err := insert.Exec()
-	if err != nil {
-		log.Print("ERROR: Unable to insert run: ", err.Error())
-		return -1, err
-	}
-
-	id, _ := res.LastInsertId()
-	return int(id), nil
-}
-
 // Launch run
 func (db *Database) LaunchRun(id int, runner int) error {
 
@@ -166,48 +144,6 @@ func (db *Database) UpdateRunLogs(run_id int, new_logs string) error {
 	}
 
 	_, err = update.Exec(new_logs)
-	if err != nil {
-		//FIXME error
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) UpdateRunStatus(run_id int, status string) error {
-
-	req := "UPDATE run SET status=? WHERE run.id='" + strconv.Itoa(run_id) + "'"
-
-	update, err := db.conn.Prepare(req)
-	defer update.Close()
-
-	if err != nil {
-		//FIXME error
-		return err
-	}
-
-	_, err = update.Exec(status)
-	if err != nil {
-		//FIXME error
-		return err
-	}
-
-	return nil
-}
-
-func (db *Database) UpdateRunRunner(run_id int, id int) error {
-
-	req := "UPDATE run SET runner=? WHERE run.id='" + strconv.Itoa(run_id) + "'"
-
-	update, err := db.conn.Prepare(req)
-	defer update.Close()
-
-	if err != nil {
-		//FIXME error
-		return err
-	}
-
-	_, err = update.Exec(id)
 	if err != nil {
 		//FIXME error
 		return err
