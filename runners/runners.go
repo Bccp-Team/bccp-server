@@ -228,7 +228,7 @@ func finish(uid int, jobId int, status string) {
 }
 
 func logs(uid int, jobId int, logs []string) {
-	err := mysql.Db.UpdateRunLogs(jobId, strings.Join(logs, "\n"))
+	err := mysql.Db.UpdateRunLogs(jobId, strings.Join(logs, "\n")+"\n")
 	if err != nil {
 		//FIXME error
 	}
