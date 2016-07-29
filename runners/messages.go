@@ -11,7 +11,8 @@ const (
 )
 
 type SubscribeRequest struct {
-	Token string
+	Token       string
+	Concurrency int
 }
 
 type SubscribeAnswer struct {

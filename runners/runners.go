@@ -93,7 +93,9 @@ func handleClient(conn net.Conn, token *string) {
 	client := &clientInfo{uid: uid, conn: conn, encoder: encoder, decoder: decoder}
 
 	runnerMaps[uid] = client
-	sched.AddRunner(uid)
+	for i := 0; i < connection.Concurrency; i = i + 1 {
+		sched.AddRunner(uid)
+	}
 
 	for {
 		var clientReq ClientRequest
@@ -176,7 +178,7 @@ func StartRun(uid, jobId int) error {
 		}
 
 		mysql.Db.LaunchRun(jobId, uid)
-		mysql.Db.UpdateRunner(uid, "running")
+		//mysql.Db.UpdateRunner(uid, "running")
 	}()
 
 	return nil
