@@ -24,7 +24,7 @@ create table run
 	status	varchar(16)	not null default 'waiting'
 				check (status in ('waiting', 'running',
 				'canceled', 'finished', 'failed', 'timeout')),
-	runner	bigint unsigned not null,
+	runner	bigint unsigned,
 	repo	varchar(64)	not null,
 	logs	text		not null,
 	primary key (id),

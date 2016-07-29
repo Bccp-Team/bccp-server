@@ -114,7 +114,7 @@ func (db *Database) UpdateRunStatus(id int, state string) error {
 }
 
 func (db *Database) AddRun(depo string) (int, error) {
-	req := "INSERT INTO run VALUES(NULL,'waiting',-1,?, '')"
+	req := "INSERT INTO run VALUES(NULL,'waiting',NULL,?, '')"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add runner: ", err.Error())

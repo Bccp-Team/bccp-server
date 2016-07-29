@@ -62,8 +62,14 @@ func main() {
 
 	mysql.Db.AddNamespace("tc1")
 	mysql.Db.AddNamespace("tc2")
-	mysql.Db.AddBatch("tc1", "#!", 10, 120)
+	id, _ = mysql.Db.AddBatch("tc1", "#!", 10, 120)
 	mysql.Db.AddBatch("tc2", "#!", 10, 120)
+	id1, _ := mysql.Db.AddRun("repo1")
+	id2, _ := mysql.Db.AddRun("repo2")
+	mysql.Db.AddBatchRun(id, id1)
+	mysql.Db.AddBatchRun(id, id2)
+	b, _ := mysql.Db.GetBatchFromRun(3)
+	println("(", b.Id, b.Namespace, b.Init_script, b.Update_time, b.Timeout, ")")
 
 	println("-----------")
 	ns, _ := mysql.Db.ListNamespaces()
