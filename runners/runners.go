@@ -137,8 +137,8 @@ func StartRun(uid, jobId int) error {
 
 	//FIXME: retreive Name, Repo, UpdateTime and Timeout
 	runReq := &RunRequest{Init: "ls; sleep 5; echo toto", Repo: run.Repo,
-		Name: "toto", JobId: jobId, UpdateTime: 1, Timeout: 60}
-	servReq := &ServerRequest{Kind: Run, Run: runReq}
+		Name: "toto", UpdateTime: 1, Timeout: 60}
+	servReq := &ServerRequest{Kind: Run, JobId: jobId, Run: runReq}
 
 	go func() {
 		err := runner.encoder.Encode(servReq)

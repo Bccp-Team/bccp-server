@@ -27,15 +27,15 @@ type ClientRequest struct {
 }
 
 type ServerRequest struct {
-	Kind int
-	Run  *RunRequest
+	Kind  int
+	JobId int
+	Run   *RunRequest
 }
 
 type RunRequest struct {
 	Init       string
 	Repo       string
 	Name       string
-	JobId      int
 	UpdateTime uint
 	Timeout    uint
 }
