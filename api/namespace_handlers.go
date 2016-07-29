@@ -1,23 +1,54 @@
 package api
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
 
-// List all run
+	"github.com/bccp-server/mysql"
+)
+
+// List all namespaces
 func GetNamespaceHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello!\n"))
+	runs, err := mysql.Db.ListNamespaces()
+
+	if err != nil {
+		w.Write([]byte("{ 'error' : 'unable to list namespaces' }"))
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+	encoder.Encode(runs)
 }
 
-// Get information about given run
+// Get information about given namespace
 func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello!\n"))
 }
 
-// Add run
-func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello!\n"))
+type namespace struct {
+	Name string
 }
 
-// Delete given runner
+// Add namespace
+func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
+	var n namespace
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&n)
+
+	if err != nil {
+		w.Write([]byte("{ 'error' : 'unable to decode namespace' }"))
+		return
+	}
+
+	err = mysql.Db.AddNamespace(n.Name)
+
+	if err != nil {
+		w.Write([]byte("{ 'error' : 'unable to create namespace' }"))
+		return
+	}
+}
+
+// Delete given namespace
 func DeleteNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello!\n"))
 }
