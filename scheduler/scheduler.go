@@ -1,6 +1,8 @@
 package scheduler
 
 import (
+	"log"
+
 	"github.com/bccp-server/mysql"
 	"github.com/bccp-server/runners"
 )
@@ -29,6 +31,7 @@ func (sched *Scheduler) Start() {
 	runs, err := mysql.Db.ListRunsByStatus("waiting")
 
 	for _, run := range runs {
+		log.Printf("scheduler: add run %v", run.Id)
 		go sched.AddRun(run.Id)
 	}
 
@@ -38,12 +41,15 @@ func (sched *Scheduler) Start() {
 
 	for {
 		runId := <-sched.runRequests
+		log.Printf("scheduler: pop run %v", runId)
 		runnerId := <-sched.waitingRunners
+		log.Printf("scheduler: pop runner %v", runnerId)
 
 		run, err := mysql.Db.GetRun(runId)
 
 		if err != nil || run.Status != "waiting" {
 			//FIXME the run does not exist anymore
+			log.Printf("scheduler: push runner %v", runnerId)
 			go sched.AddRunner(runnerId)
 			continue
 		}
@@ -52,6 +58,7 @@ func (sched *Scheduler) Start() {
 
 		if err != nil || runner.Status != "waiting" {
 			//FIXME the run does not exist anymore
+			log.Printf("scheduler: push run %v", runId)
 			go sched.AddRun(runId)
 			continue
 		}
