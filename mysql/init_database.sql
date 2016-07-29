@@ -27,8 +27,8 @@ create table run
 	runner	bigint unsigned,
 	repo	varchar(64)	not null,
 	logs	text		not null,
-	primary key (id),
-	foreign key(runner) references runner(id)
+	primary key (id)
+--	foreign key(runner) references runner(id)
 );
 
 create table namespace

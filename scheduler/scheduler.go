@@ -26,6 +26,16 @@ func (sched *Scheduler) Start() {
 	sched.runRequests = make(chan int, 4096)
 	sched.waitingRunners = make(chan int, 4096)
 
+	runs, err := mysql.Db.ListRunsByStatus("waiting")
+
+	for _, run := range runs {
+		go sched.AddRun(run.Id)
+	}
+
+	if err != nil {
+		//FIXME
+	}
+
 	for {
 		runId := <-sched.runRequests
 		runnerId := <-sched.waitingRunners

@@ -26,7 +26,8 @@ func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type namespace struct {
-	Name string
+	Name  string
+	Repos []string
 }
 
 // Add namespace
@@ -45,6 +46,14 @@ func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Write([]byte("{ 'error' : 'unable to create namespace' }"))
 		return
+	}
+
+	for _, repo := range n.Repos {
+		_, err = mysql.Db.AddRepoToNamespace(n.Name, repo)
+		if err != nil {
+			w.Write([]byte("{ 'error' : 'unable to create repo' }"))
+			return
+		}
 	}
 }
 

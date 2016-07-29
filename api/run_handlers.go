@@ -58,7 +58,7 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&runReq)
 
 	if err != nil {
-		w.Write([]byte("{'error': 'unable to parse runquest'}"))
+		w.Write([]byte("{'error': 'unable to parse request'}"))
 		return
 	}
 

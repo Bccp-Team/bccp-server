@@ -53,35 +53,8 @@ func main() {
 	go runners.WaitRunners(&scheduler.DefaultScheduler, config.Runner_port, config.Runner_token)
 	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
 
-	id, _ := mysql.Db.AddRun("foobarbaz")
-
-	scheduler.DefaultScheduler.AddRun(id)
-
 	// Mysql tests
 	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
-
-	mysql.Db.AddNamespace("tc1")
-	mysql.Db.AddNamespace("tc2")
-	id, _ = mysql.Db.AddBatch("tc1", "#!", 10, 120)
-	mysql.Db.AddBatch("tc2", "#!", 10, 120)
-	id1, _ := mysql.Db.AddRun("repo1")
-	id2, _ := mysql.Db.AddRun("repo2")
-	mysql.Db.AddBatchRun(id, id1)
-	mysql.Db.AddBatchRun(id, id2)
-	b, _ := mysql.Db.GetBatchFromRun(3)
-	println("(", b.Id, b.Namespace, b.Init_script, b.Update_time, b.Timeout, ")")
-
-	println("-----------")
-	ns, _ := mysql.Db.ListNamespaces()
-	for _, n := range ns {
-		println("(", n, ")")
-	}
-	println("-----------")
-	batchs := mysql.Db.ListBatchs()
-	for _, n := range batchs {
-		println("(", n.Id, n.Namespace, n.Init_script, n.Update_time, n.Timeout, ")")
-	}
-	println("-----------")
 
 	wait.Wait()
 }

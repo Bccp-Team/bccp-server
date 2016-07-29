@@ -195,6 +195,7 @@ func finish(uid int, jobId int, status string) {
 	if err != nil {
 		//FIXME error
 	}
+	sched.AddRunner(uid)
 }
 
 func logs(uid int, jobId int, logs []string) {

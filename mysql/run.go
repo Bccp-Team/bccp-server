@@ -51,6 +51,41 @@ func (db *Database) ListRuns() ([]Run, error) {
 	return runs, nil
 }
 
+func (db *Database) ListRunsByStatus(s string) ([]Run, error) {
+
+	var id int
+	var status string
+	var runner_id int
+	var repo string
+	var logs string
+	// Execute the query
+	rows, err := db.conn.Query("SELECT * FROM run WHERE status = ?", s)
+	if err != nil {
+		log.Print("ERROR: Unable to select run: ", err.Error())
+		return nil, err
+	}
+
+	var runs []Run
+
+	// Fetch rows
+	for rows.Next() {
+		// get RawBytes from data
+		err = rows.Scan(&id, &status, &runner_id, &repo, &logs)
+		if err != nil {
+			log.Print("ERROR: Unable to get next row: ", err.Error())
+			return nil, err
+		}
+
+		runs = append(runs, Run{id, status, runner_id, repo, logs})
+	}
+	if err = rows.Err(); err != nil {
+		log.Print("ERROR: Undefined row err: ", err.Error())
+		return runs, err
+	}
+
+	return runs, nil
+}
+
 // Get runner info by id
 func (db *Database) GetRun(run_id int) (*Run, error) {
 
@@ -114,7 +149,7 @@ func (db *Database) UpdateRunStatus(id int, state string) error {
 }
 
 func (db *Database) AddRun(depo string) (int, error) {
-	req := "INSERT INTO run VALUES(NULL,'waiting',NULL,?, '')"
+	req := "INSERT INTO run VALUES(NULL,'waiting',-1,?, '')"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
