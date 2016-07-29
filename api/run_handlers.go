@@ -16,7 +16,8 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	runs, err := mysql.Db.ListRuns()
 
 	if err != nil {
-		w.Write([]byte("{ 'error' : 'unable to list runs' }"))
+		w.Write([]byte("{ \"error\" : \"unable to list runs\" }"))
+		return
 	}
 
 	encoder := json.NewEncoder(w)
@@ -30,13 +31,15 @@ func GetRunByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("{'error': 'wrong id'}"))
+		w.Write([]byte("{\"error\": \"wrong id\"}"))
+		return
 	}
 
 	run, err := mysql.Db.GetRun(int(id))
 
 	if err != nil {
-		w.Write([]byte("{'error': 'the run does not exist'}"))
+		w.Write([]byte("{\"error\": \"the run does not exist\"}"))
+		return
 	}
 
 	encoder := json.NewEncoder(w)
@@ -59,12 +62,12 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&runReq)
 
 	if err != nil {
-		w.Write([]byte("{'error': 'unable to parse request'}"))
+		w.Write([]byte("{\"error\": \"unable to parse request\"}"))
 		return
 	}
 
 	if runReq.Namespace == "" || runReq.InitScript == "" || runReq.UpdateTime <= 0 || runReq.Timeout <= 0 {
-		w.Write([]byte("{'error': 'missing fields'}"))
+		w.Write([]byte("{\"error\": \"missing fields\"}"))
 		return
 	}
 
@@ -72,28 +75,28 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 		runReq.UpdateTime, runReq.Timeout)
 
 	if err != nil {
-		w.Write([]byte("{'error': 'unable to create batch'}"))
+		w.Write([]byte("{\"error\": \"unable to create batch\"}"))
 		return
 	}
 
 	repos, err := mysql.Db.GetNamespaceRepos(runReq.Namespace)
 
 	if err != nil {
-		w.Write([]byte("{'error': 'unable to list repos'}"))
+		w.Write([]byte("{\"error\": \"unable to list repos\"}"))
 		return
 	}
 
 	for _, repo := range repos {
 		runId, err := mysql.Db.AddRun(repo)
 		if err != nil {
-			w.Write([]byte("{'error': 'unable to add run'}"))
+			w.Write([]byte("{\"error\": \"unable to add run\"}"))
 			return
 		}
 
 		err = mysql.Db.AddBatchRun(id, runId)
 
 		if err != nil {
-			w.Write([]byte("{'error': 'unable to add batch/run'}"))
+			w.Write([]byte("{\"error\": \"unable to add batch/run\"}"))
 			return
 		}
 
@@ -108,13 +111,15 @@ func DeleteRunHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("{'error': 'wrong id'}"))
+		w.Write([]byte("{\"error\": \"wrong id\"}"))
+		return
 	}
 
 	run, err := mysql.Db.GetRun(int(id))
 
 	if err != nil {
-		w.Write([]byte("{'error': 'the run does not exist'}"))
+		w.Write([]byte("{\"error\": \"the run does not exist\"}"))
+		return
 	}
 
 	runners.KillRun(run.Runner_id, id)

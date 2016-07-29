@@ -24,13 +24,15 @@ func GetRunnerByIdHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("'error': 'wrong id'"))
+		w.Write([]byte("\"error\": \"wrong id\""))
+		return
 	}
 
 	runner, err := mysql.Db.GetRunner(int(id))
 
 	if err != nil {
-		w.Write([]byte("'error': 'the runner does not exist'"))
+		w.Write([]byte("\"error\": \"the runner does not exist\""))
+		return
 	}
 
 	encoder := json.NewEncoder(w)
@@ -44,12 +46,13 @@ func DeleteRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("'error': 'wrong id'"))
+		w.Write([]byte("\"error\": \"wrong id\""))
+		return
 	}
 
 	runners.KillRunner(id)
 
-	w.Write([]byte("'ok': 'killed'"))
+	w.Write([]byte("\"ok\": \"killed\""))
 }
 
 // FIXME: we should do something clever to avoid race conditions

@@ -12,7 +12,7 @@ func GetNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	runs, err := mysql.Db.ListNamespaces()
 
 	if err != nil {
-		w.Write([]byte("{ 'error' : 'unable to list namespaces' }"))
+		w.Write([]byte("{ \"error\" : \"unable to list namespaces\" }"))
 		return
 	}
 
@@ -37,21 +37,21 @@ func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&n)
 
 	if err != nil {
-		w.Write([]byte("{ 'error' : 'unable to decode namespace' }"))
+		w.Write([]byte("{ \"error\" : \"unable to decode namespace\" }"))
 		return
 	}
 
 	err = mysql.Db.AddNamespace(n.Name)
 
 	if err != nil {
-		w.Write([]byte("{ 'error' : 'unable to create namespace' }"))
+		w.Write([]byte("{ \"error\" : \"unable to create namespace\" }"))
 		return
 	}
 
 	for _, repo := range n.Repos {
 		_, err = mysql.Db.AddRepoToNamespace(n.Name, repo)
 		if err != nil {
-			w.Write([]byte("{ 'error' : 'unable to create repo' }"))
+			w.Write([]byte("{ \"error\" : \"unable to create repo\" }"))
 			return
 		}
 	}
