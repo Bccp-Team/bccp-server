@@ -103,6 +103,7 @@ func handleClient(conn net.Conn, token *string) {
 
 		if err != nil {
 			log.Printf(err.Error())
+			mysql.Db.UpdateRunner(uid, "dead")
 			return
 		}
 
@@ -164,9 +165,13 @@ func StartRun(uid, jobId int) error {
 		//FIXME error
 	}
 
-	//FIXME: retreive Name, Repo, UpdateTime and Timeout
-	runReq := &RunRequest{Init: "ls; sleep 5; echo toto", Repo: run.Repo,
-		Name: "toto", UpdateTime: 1, Timeout: 60}
+	batch, err := mysql.Db.GetBatchFromRun(jobId)
+	if err != nil {
+		//FIXME error
+	}
+	runReq := &RunRequest{Init: batch.Init_script, Repo: run.Repo,
+		Name: "run_" + string(jobId), UpdateTime: uint(batch.Update_time),
+		Timeout: uint(batch.Timeout)}
 	servReq := &ServerRequest{Kind: Run, JobId: jobId, Run: runReq}
 
 	go func() {
