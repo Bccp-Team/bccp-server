@@ -47,8 +47,7 @@ func DeleteRunnerHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("'error': 'wrong id'"))
 	}
 
-	runners.KillRun(id)
-	mysql.Db.UpdateRunner(id, "dead")
+	runners.KillRunner(id)
 
 	w.Write([]byte("'ok': 'killed'"))
 }

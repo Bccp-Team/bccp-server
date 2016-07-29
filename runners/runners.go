@@ -117,9 +117,36 @@ func handleClient(conn net.Conn, token *string) {
 	}
 }
 
-//FIXME: we should take the runner and the run as parameter
-func KillRun(uid int) {
+func KillRunner(uid int) {
+	runner, ok := runnerMaps[uid]
+
+	if !ok {
+		//FIXME error
+	}
+
+	runner.conn.Close()
+	mysql.Db.UpdateRunner(uid, "dead")
+}
+
+func KillRun(uid, JobId int) {
 	//FIXME
+	runner, ok := runnerMaps[uid]
+
+	if !ok {
+		//FIXME error
+	}
+
+	servReq := &ServerRequest{Kind: Run, JobId: JobId, Run: nil}
+
+	go func() {
+		err := runner.encoder.Encode(servReq)
+
+		if err != nil {
+			//FIXME error
+			return
+		}
+
+	}()
 }
 
 func StartRun(uid, jobId int) error {

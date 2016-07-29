@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bccp-server/mysql"
+	"github.com/bccp-server/runners"
 	"github.com/bccp-server/scheduler"
 	"github.com/gorilla/mux"
 )
@@ -102,5 +103,21 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 
 // Delete given runner
 func DeleteRunHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello!\n"))
+	vars := mux.Vars(r)
+
+	id, err := strconv.Atoi(vars["id"])
+
+	if err != nil {
+		w.Write([]byte("{'error': 'wrong id'}"))
+	}
+
+	run, err := mysql.Db.GetRun(int(id))
+
+	if err != nil {
+		w.Write([]byte("{'error': 'the run does not exist'}"))
+	}
+
+	runners.KillRun(run.Runner_id, id)
+
+	err = mysql.Db.UpdateRunStatus(id, "canceled")
 }
