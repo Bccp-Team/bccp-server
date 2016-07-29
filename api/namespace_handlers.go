@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/bccp-server/mysql"
 )
@@ -22,7 +23,16 @@ func GetNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 
 // Get information about given namespace
 func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello!\n"))
+	namespace := strings.Split(r.URL.Path, "/")[2]
+	runs, err := mysql.Db.GetNamespaceRepos(namespace)
+
+	if err != nil {
+		w.Write([]byte("{ 'error' : 'unable to list namespaces' }"))
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+	encoder.Encode(runs)
 }
 
 type namespace struct {
