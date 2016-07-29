@@ -30,13 +30,13 @@ func (sched *Scheduler) Start() {
 
 	runs, err := mysql.Db.ListRunsByStatus("waiting")
 
+	if err != nil {
+		//FIXME
+	}
+
 	for _, run := range runs {
 		log.Printf("scheduler: add run %v", run.Id)
 		go sched.AddRun(run.Id)
-	}
-
-	if err != nil {
-		//FIXME
 	}
 
 	for {
