@@ -24,6 +24,23 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(runs)
 }
 
+func GetActiveRunHandler(w http.ResponseWriter, r *http.Request) {
+	runs, err := mysql.Db.ListRunsByStatus("running")
+
+	if err != nil {
+		w.Write([]byte("{ \"error\" : \"unable to list runs\" }"))
+		return
+	}
+	runs_aux, err := mysql.Db.ListRunsByStatus("waiting")
+	if err != nil {
+		w.Write([]byte("{ \"error\" : \"unable to list runs\" }"))
+		return
+	}
+
+	encoder := json.NewEncoder(w)
+	encoder.Encode(append(runs, runs_aux...))
+}
+
 // Get information about given run
 func GetRunByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

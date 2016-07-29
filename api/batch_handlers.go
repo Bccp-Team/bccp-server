@@ -24,6 +24,12 @@ type batchInfo struct {
 }
 
 // Get information about given batch
+func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
+	batchs := mysql.Db.ListBatchs()
+	encoder := json.NewEncoder(w)
+	encoder.Encode(batchs)
+}
+
 func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
