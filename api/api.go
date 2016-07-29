@@ -45,7 +45,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crt_file string, key_file s
 		http.Handle("/", r)
 		log.Print("INFO: Launching http server with crt: '" + crt_file + "'")
 		log.Print("      and key: '" + key_file + "'")
-		err = http.ListenAndServe(":"+port, nil)
+		err = http.ListenAndServeTLS(":"+port, crt_file, key_file, nil)
 		defer (*wait).Done()
 	}()
 	time.Sleep(1 * time.Second)
