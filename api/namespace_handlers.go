@@ -24,7 +24,7 @@ func GetNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 // Get information about given namespace
 func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
 	namespace := strings.Split(r.URL.Path, "/")[2]
-	runs, err := mysql.Db.GetNamespaceRepos(namespace)
+	repos, err := mysql.Db.GetNamespaceRepos(namespace)
 
 	if err != nil {
 		w.Write([]byte("{ 'error' : 'unable to list namespaces' }"))
@@ -32,12 +32,15 @@ func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encoder := json.NewEncoder(w)
-	encoder.Encode(runs)
+	encoder.Encode(repos)
 }
 
 type namespace struct {
 	Name  string
-	Repos []string
+	Repos []struct {
+		Repo string
+		Ssh  string
+	}
 }
 
 // Add namespace
@@ -59,7 +62,7 @@ func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, repo := range n.Repos {
-		_, err = mysql.Db.AddRepoToNamespace(n.Name, repo)
+		_, err = mysql.Db.AddRepoToNamespace(n.Name, repo.Repo, repo.Ssh)
 		if err != nil {
 			w.Write([]byte("{ \"error\" : \"unable to create repo\" }"))
 			return

@@ -165,12 +165,18 @@ func StartRun(uid, jobId int) error {
 		//FIXME error
 	}
 
+	repo, err := mysql.Db.GetRepo(run.Repo)
+
+	if err != nil {
+		//FIXME error
+	}
+
 	batch, err := mysql.Db.GetBatchFromRun(jobId)
 	if err != nil {
 		//FIXME error
 	}
-	runReq := &RunRequest{Init: batch.Init_script, Repo: run.Repo,
-		Name: "run_" + string(jobId), UpdateTime: uint(batch.Update_time),
+	runReq := &RunRequest{Init: batch.Init_script, Repo: repo.Ssh,
+		Name: repo.Repo, UpdateTime: uint(batch.Update_time),
 		Timeout: uint(batch.Timeout)}
 	servReq := &ServerRequest{Kind: Run, JobId: jobId, Run: runReq}
 

@@ -65,6 +65,24 @@ func (db *Database) GetBatch(id int) (*Batch, error) {
 	return &Batch{id, namespace, init_script, update_time, timeout}, nil
 }
 
+func (db *Database) GetLastBatchFromNamespace(n string) (*Batch, error) {
+
+	var b_id int
+	var namespace string
+	var init_script string
+	var update_time int
+	var timeout int
+	// Execute the query
+	req := "SELECT * FROM batch WHERE batch.namespace=? ORDER BY id DESC"
+	err := db.conn.QueryRow(req, n).Scan(&b_id, &namespace, &init_script, &update_time, &timeout)
+	if err != nil {
+		log.Print("ERROR: Unable to select batch: ", err.Error())
+		return nil, err
+	}
+
+	return &Batch{b_id, namespace, init_script, update_time, timeout}, nil
+}
+
 func (db *Database) AddBatch(namespace string, init_script string, update_time int, timeout int) (int, error) {
 
 	// Prepare statement for inserting data

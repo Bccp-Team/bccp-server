@@ -11,7 +11,7 @@ type Run struct {
 	Id        int
 	Status    string
 	Runner_id int
-	Repo      string
+	Repo      int
 	Logs      string
 }
 
@@ -21,7 +21,7 @@ func (db *Database) ListRuns() ([]Run, error) {
 	var id int
 	var status string
 	var runner_id int
-	var repo string
+	var repo int
 	var logs string
 	// Execute the query
 	rows, err := db.conn.Query("SELECT * FROM run")
@@ -56,7 +56,7 @@ func (db *Database) ListBatchRuns(batch_id int, s string) ([]Run, error) {
 	var id int
 	var status string
 	var runner_id int
-	var repo string
+	var repo int
 	var logs string
 	// Execute the query
 	rows, err := db.conn.Query("SELECT run.id, run.status, run.runner, run.repo, run.logs FROM run JOIN batch_runs ON run.id = batch_runs.run WHERE batch=? AND status=?", batch_id, s)
@@ -91,7 +91,7 @@ func (db *Database) ListRunsByStatus(s string) ([]Run, error) {
 	var id int
 	var status string
 	var runner_id int
-	var repo string
+	var repo int
 	var logs string
 	// Execute the query
 	rows, err := db.conn.Query("SELECT * FROM run WHERE status = ?", s)
@@ -127,7 +127,7 @@ func (db *Database) GetRun(run_id int) (*Run, error) {
 	var id int
 	var status string
 	var runner_id int
-	var repo string
+	var repo int
 	var logs string
 	// Execute the query
 	req := "SELECT * FROM run WHERE run.id='" + strconv.Itoa(run_id) + "'"
@@ -183,7 +183,7 @@ func (db *Database) UpdateRunStatus(id int, state string) error {
 	return nil
 }
 
-func (db *Database) AddRun(depo string) (int, error) {
+func (db *Database) AddRun(depo int) (int, error) {
 	req := "INSERT INTO run VALUES(NULL,'waiting',-1,?, '')"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {

@@ -40,6 +40,8 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crt_file string, key_file s
 	put_api.HandleFunc("/namespace", PutNamespaceHandler)
 	del_api.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
 
+	pst_api.HandleFunc("/ci/{namespace:[--~]+}", PostCommitHandler)
+
 	// Launch async server with router
 	var err error
 	(*wait).Add(1)

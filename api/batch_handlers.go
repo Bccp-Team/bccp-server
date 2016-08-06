@@ -11,7 +11,7 @@ import (
 
 type runInfo struct {
 	Id   int
-	Repo string
+	Repo int
 }
 
 type batchInfo struct {

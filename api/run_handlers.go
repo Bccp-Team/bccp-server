@@ -104,7 +104,7 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, repo := range repos {
-		runId, err := mysql.Db.AddRun(repo)
+		runId, err := mysql.Db.AddRun(repo.Id)
 		if err != nil {
 			w.Write([]byte("{\"error\": \"unable to add run\"}"))
 			return

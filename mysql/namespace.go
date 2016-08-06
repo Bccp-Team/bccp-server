@@ -63,7 +63,7 @@ func (db *Database) DeleteNamespace(namespace string) error {
 	}
 
 	for _, repo := range repos {
-		db.DeleteRepoFromNamespace(namespace, repo)
+		db.DeleteRepoFromNamespace(namespace, repo.Id)
 	}
 
 	req := "delete from namespace where name=?"
