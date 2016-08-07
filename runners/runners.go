@@ -2,6 +2,7 @@ package runners
 
 import (
 	"encoding/gob"
+	"errors"
 	"log"
 	"net"
 	"strings"
@@ -59,6 +60,7 @@ type clientInfo struct {
 
 func handleClient(conn net.Conn, token *string) {
 	defer conn.Close()
+	log.Printf("WARNING: runner: %v: start connection", conn.RemoteAddr())
 	encoder := gob.NewEncoder(conn)
 	decoder := gob.NewDecoder(conn)
 
@@ -66,28 +68,29 @@ func handleClient(conn net.Conn, token *string) {
 	err := decoder.Decode(&connection)
 
 	if err != nil {
-		log.Printf(err.Error())
+		log.Printf("WARNING: runner: %v: failed to decode connection: %v", conn.RemoteAddr(), err.Error())
 		return
 	}
 
 	if connection.Token != *token {
-		log.Printf("bad token receive: %v", connection.Token)
+		log.Printf("WARNING: runner: %v: wrong token: %v", conn.RemoteAddr(), connection.Token)
 		return
 	}
 
 	uid, err := mysql.Db.AddRunner(conn.RemoteAddr().String())
 
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: %v: failed to add runner: %v", conn.RemoteAddr(), err.Error())
+		return
 	}
+	defer mysql.Db.UpdateRunner(uid, "dead")
 
 	answer := message.SubscribeAnswer{ClientUID: uid}
 
 	err = encoder.Encode(&answer)
 
 	if err != nil {
-		log.Printf(err.Error())
-		mysql.Db.UpdateRunner(uid, "dead")
+		log.Printf("WARNING: runner: %v: failed to encode ack: %v", conn.RemoteAddr(), err.Error())
 		return
 	}
 
@@ -103,8 +106,7 @@ func handleClient(conn net.Conn, token *string) {
 		err = decoder.Decode(&clientReq)
 
 		if err != nil {
-			log.Printf(err.Error())
-			mysql.Db.UpdateRunner(uid, "dead")
+			log.Printf("WARNING: runner: %v: failed to decode request: %v", conn.RemoteAddr(), err.Error())
 			return
 		}
 
@@ -116,7 +118,10 @@ func handleClient(conn net.Conn, token *string) {
 		case message.Logs:
 			logs(uid, clientReq.JobId, clientReq.Logs)
 		case message.Error:
+			log.Printf("WARNING: runner: %v: receive error: %v", conn.RemoteAddr(), clientReq.Message)
 		default:
+			log.Printf("WARNING: runner: %v: unknow request: %v", conn.RemoteAddr(), clientReq.Kind)
+			return
 		}
 	}
 }
@@ -125,28 +130,29 @@ func KillRunner(uid int) {
 	runner, ok := runnerMaps[uid]
 
 	if !ok {
-		//FIXME error
+		log.Printf("WARNING: runner: %v: kill an inexistant runner", uid)
+		return
 	}
 
 	runner.conn.Close()
 	mysql.Db.UpdateRunner(uid, "dead")
 }
 
-func KillRun(uid, JobId int) {
-	//FIXME
+func KillRun(uid, jobId int) {
 	runner, ok := runnerMaps[uid]
 
 	if !ok {
-		//FIXME error
+		log.Printf("WARNING: runner: kill a run on an inexistant runner (%v - %v)", uid, jobId)
+		return
 	}
 
-	servReq := &message.ServerRequest{Kind: message.Run, JobId: JobId, Run: nil}
+	servReq := &message.ServerRequest{Kind: message.Kill, JobId: jobId, Run: nil}
 
 	go func() {
 		err := runner.encoder.Encode(servReq)
 
 		if err != nil {
-			//FIXME error
+			log.Printf("WARNING: runner: failed to send kill request (%v - %v)", uid, jobId)
 			return
 		}
 
@@ -157,25 +163,31 @@ func StartRun(uid, jobId int) error {
 	runner, ok := runnerMaps[uid]
 
 	if !ok {
-		//FIXME error
+		log.Printf("WARNING: runner: %v: run on an inexistant runner", uid)
+		return errors.New("the runner does not exist")
 	}
 
 	run, err := mysql.Db.GetRun(jobId)
 
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: %v: %v", uid, err.Error())
+		return err
 	}
 
 	repo, err := mysql.Db.GetRepo(run.Repo)
 
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobId, err.Error())
+		return err
 	}
 
 	batch, err := mysql.Db.GetBatchFromRun(jobId)
+
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobId, err.Error())
+		return err
 	}
+
 	runReq := &message.RunRequest{Init: batch.Init_script, Repo: repo.Ssh,
 		Name: repo.Repo, UpdateTime: uint(batch.Update_time),
 		Timeout: uint(batch.Timeout)}
@@ -185,7 +197,10 @@ func StartRun(uid, jobId int) error {
 		err := runner.encoder.Encode(servReq)
 
 		if err != nil {
-			//FIXME error
+			log.Printf("WARNING: runner: failed to send run request (%v - %v): %v", uid, jobId, err.Error())
+			mysql.Db.UpdateRunner(uid, "dead")
+			runner.conn.Close()
+			sched.AddRun(jobId)
 			return
 		}
 
@@ -200,7 +215,8 @@ func PingRunner(uid int) error {
 	runner, ok := runnerMaps[uid]
 
 	if !ok {
-		//FIXME error
+		log.Printf("WARNING: runner: %v: run on an inexistant runner", uid)
+		return errors.New("the runner does not exist")
 	}
 
 	servReq := &message.ServerRequest{Kind: message.Ping, Run: nil}
@@ -208,7 +224,7 @@ func PingRunner(uid int) error {
 	go func() {
 		err := runner.encoder.Encode(servReq)
 		if err != nil {
-			//FIXME error
+			log.Printf("WARNING: runner: failed to send ping request %v: %v", uid, err.Error())
 			return
 		}
 	}()
@@ -219,22 +235,24 @@ func PingRunner(uid int) error {
 func ack(uid int) {
 	r, err := mysql.Db.GetRunner(uid)
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: ack on unknow runner %v: %v", uid, err.Error())
+		return
 	}
 	err = mysql.Db.UpdateRunner(r.Id, r.Status)
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: can't update runner %v: %v", uid, err.Error())
 	}
 }
 
 func finish(uid int, jobId int, status string) {
 	err := mysql.Db.UpdateRunStatus(jobId, status)
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: update on unknow run %v: %v", jobId, err.Error())
 	}
 	err = mysql.Db.UpdateRunner(uid, "waiting")
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: update on unknow runner %v: %v", uid, err.Error())
+		return
 	}
 	sched.AddRunner(uid)
 }
@@ -242,6 +260,6 @@ func finish(uid int, jobId int, status string) {
 func logs(uid int, jobId int, logs []string) {
 	err := mysql.Db.UpdateRunLogs(jobId, strings.Join(logs, "\n")+"\n")
 	if err != nil {
-		//FIXME error
+		log.Printf("WARNING: runner: update on unknow run %v: %v", jobId, err.Error())
 	}
 }
