@@ -16,8 +16,8 @@ import (
 
 // Info from config file
 type Config struct {
-	Port           string
-	Runner_port    string
+	Api_port       string
+	Runner_service string
 	Runner_token   string
 	Key_file       string
 	Crt_file       string
@@ -50,8 +50,8 @@ func main() {
 	var wait sync.WaitGroup
 	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
 	go scheduler.DefaultScheduler.Start()
-	go runners.WaitRunners(&scheduler.DefaultScheduler, config.Runner_port, config.Runner_token)
-	api.SetupRestAPI(&wait, config.Port, config.Crt_file, config.Key_file)
+	go runners.WaitRunners(&scheduler.DefaultScheduler, config.Runner_service, config.Runner_token)
+	api.SetupRestAPI(&wait, config.Api_port, config.Crt_file, config.Key_file)
 
 	// Mysql tests
 	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
