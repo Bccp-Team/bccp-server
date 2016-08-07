@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/bccp-server/ischeduler"
+	"github.com/bccp-server/message"
 	"github.com/bccp-server/mysql"
 )
 
@@ -61,7 +62,7 @@ func handleClient(conn net.Conn, token *string) {
 	encoder := gob.NewEncoder(conn)
 	decoder := gob.NewDecoder(conn)
 
-	var connection SubscribeRequest
+	var connection message.SubscribeRequest
 	err := decoder.Decode(&connection)
 
 	if err != nil {
@@ -80,7 +81,7 @@ func handleClient(conn net.Conn, token *string) {
 		//FIXME error
 	}
 
-	answer := SubscribeAnswer{ClientUID: uid}
+	answer := message.SubscribeAnswer{ClientUID: uid}
 
 	err = encoder.Encode(&answer)
 
@@ -98,7 +99,7 @@ func handleClient(conn net.Conn, token *string) {
 	}
 
 	for {
-		var clientReq ClientRequest
+		var clientReq message.ClientRequest
 		err = decoder.Decode(&clientReq)
 
 		if err != nil {
@@ -108,13 +109,13 @@ func handleClient(conn net.Conn, token *string) {
 		}
 
 		switch clientReq.Kind {
-		case Ack:
+		case message.Ack:
 			ack(uid)
-		case Finish:
+		case message.Finish:
 			finish(uid, clientReq.JobId, clientReq.Status)
-		case Logs:
+		case message.Logs:
 			logs(uid, clientReq.JobId, clientReq.Logs)
-		case Error:
+		case message.Error:
 		default:
 		}
 	}
@@ -139,7 +140,7 @@ func KillRun(uid, JobId int) {
 		//FIXME error
 	}
 
-	servReq := &ServerRequest{Kind: Run, JobId: JobId, Run: nil}
+	servReq := &message.ServerRequest{Kind: message.Run, JobId: JobId, Run: nil}
 
 	go func() {
 		err := runner.encoder.Encode(servReq)
@@ -175,10 +176,10 @@ func StartRun(uid, jobId int) error {
 	if err != nil {
 		//FIXME error
 	}
-	runReq := &RunRequest{Init: batch.Init_script, Repo: repo.Ssh,
+	runReq := &message.RunRequest{Init: batch.Init_script, Repo: repo.Ssh,
 		Name: repo.Repo, UpdateTime: uint(batch.Update_time),
 		Timeout: uint(batch.Timeout)}
-	servReq := &ServerRequest{Kind: Run, JobId: jobId, Run: runReq}
+	servReq := &message.ServerRequest{Kind: message.Run, JobId: jobId, Run: runReq}
 
 	go func() {
 		err := runner.encoder.Encode(servReq)
@@ -202,7 +203,7 @@ func PingRunner(uid int) error {
 		//FIXME error
 	}
 
-	servReq := &ServerRequest{Kind: Ping, Run: nil}
+	servReq := &message.ServerRequest{Kind: message.Ping, Run: nil}
 
 	go func() {
 		err := runner.encoder.Encode(servReq)
