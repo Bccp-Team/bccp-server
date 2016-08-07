@@ -74,3 +74,35 @@ func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteBatchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello!\n"))
 }
+
+func AddBatchHandler(w http.ResponseWriter, r *http.Request) {
+	type runRequest struct {
+		Namespace  string
+		InitScript string
+		UpdateTime int
+		Timeout    int
+	}
+
+	var runReq runRequest
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&runReq)
+
+	if err != nil {
+		w.Write([]byte("{\"error\": \"unable to parse request\"}"))
+		return
+	}
+
+	if runReq.Namespace == "" || runReq.InitScript == "" || runReq.UpdateTime <= 0 || runReq.Timeout <= 0 {
+		w.Write([]byte("{\"error\": \"missing fields\"}"))
+		return
+	}
+
+	_, err = mysql.Db.AddBatch(runReq.Namespace, runReq.InitScript,
+		runReq.UpdateTime, runReq.Timeout)
+
+	if err != nil {
+		w.Write([]byte("{\"error\": \"unable to create batch\"}"))
+		return
+	}
+}

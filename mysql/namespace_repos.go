@@ -102,7 +102,7 @@ func (db *Database) GetRepoFromName(name string, namespace string) (*Repo, error
 	var repo string
 	var ssh string
 	// Execute the query
-	req := "SELECT repo, ssh FROM namespace_repos where repo=? AND namespace=?"
+	req := "SELECT id, repo, ssh FROM namespace_repos where repo=? AND namespace=?"
 	err := db.conn.QueryRow(req, name, namespace).Scan(&id, &repo, &ssh)
 	if err != nil {
 		log.Print("ERROR: Unable to select namespace repos: ", err.Error())

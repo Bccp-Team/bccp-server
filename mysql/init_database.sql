@@ -18,24 +18,9 @@ create table runner
 	primary key (id)
 );
 
-create table run
-(
-	id	serial		not null,
-	status	varchar(16)	not null default 'waiting'
-				check (status in ('waiting', 'running',
-				'canceled', 'finished', 'failed', 'timeout')),
-	runner	bigint unsigned,
-	repo    bigint unsigned,
-	logs	text		not null,
-	primary key (id)
-	foreign key(repo) references namespace_repos(id)
---	foreign key(runner) references runner(id)
-);
-
 create table namespace
 (
 	name	varchar(64)	not null unique,
-        is_ci   boolean,
 	primary key (name)
 );
 
@@ -58,6 +43,20 @@ create table batch
 	timeout		int		not null,
 	primary key (id),
 	foreign key(namespace) references namespace(name)
+);
+
+create table run
+(
+	id	serial		not null,
+	status	varchar(16)	not null default 'waiting'
+				check (status in ('waiting', 'running',
+				'canceled', 'finished', 'failed', 'timeout')),
+	runner	bigint unsigned,
+	repo    bigint unsigned,
+	logs	text		not null,
+	primary key (id),
+	foreign key(repo) references namespace_repos(id)
+--	foreign key(runner) references runner(id)
 );
 
 create table batch_runs
