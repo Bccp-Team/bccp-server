@@ -14,18 +14,21 @@ import (
 // List all run
 func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		Status string `json:"status"`
-		Runner string `json:"runner"`
-		Repo   string `json:"repo"`
+		Status string `json:status`
+		Runner string `json:runner`
+		Repo   string `json:repo`
 	}
 
 	var req request
 
 	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
+
 	err := decoder.Decode(&req)
 
 	if err != nil {
-		//FIXME error
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
 	}
 
 	filter := make(map[string]string)
@@ -43,106 +46,121 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	runs, err := mysql.Db.ListRuns(filter)
 
 	if err != nil {
-		w.Write([]byte("{ \"error\" : \"unable to list runs\" }"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	encoder := json.NewEncoder(w)
 	encoder.Encode(runs)
 }
 
 // Get information about given run
 func GetRunByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"wrong id\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	run, err := mysql.Db.GetRun(int(id))
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"the run does not exist\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	encoder := json.NewEncoder(w)
 	encoder.Encode(run)
 }
 
 // Add run
 
-type runRequest struct {
-	Namespace  string
-	InitScript string
-	UpdateTime int
-	Timeout    int
-}
-
 func PutRunHandler(w http.ResponseWriter, r *http.Request) {
+	type runRequest struct {
+		Namespace  string `json:namespace`
+		InitScript string `json:init_script`
+		UpdateTime int    `json:update_time`
+		Timeout    int    `json:timeout`
+	}
+
+	type runResult struct {
+		Id   int            `json:id`
+		Runs map[int]string `json:runs`
+	}
+
 	var runReq runRequest
+	var runRes runResult
 
 	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
 	err := decoder.Decode(&runReq)
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"unable to parse request\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	if runReq.Namespace == "" || runReq.InitScript == "" || runReq.UpdateTime <= 0 || runReq.Timeout <= 0 {
-		w.Write([]byte("{\"error\": \"missing fields\"}"))
+		encoder.Encode(map[string]string{"error": "missing fields"})
 		return
 	}
 
 	batch_id, err := mysql.Db.AddBatch(runReq.Namespace, runReq.InitScript,
 		runReq.UpdateTime, runReq.Timeout)
 
+	runRes.Id = batch_id
+
 	if err != nil {
-		w.Write([]byte("{\"error\": \"unable to create batch\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	repos, err := mysql.Db.GetNamespaceRepos(&runReq.Namespace)
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"unable to list repos\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
+
+	runRes.Runs = make(map[int]string)
 
 	for _, repo := range repos {
 		runId, err := mysql.Db.AddRun(repo.Id, batch_id)
 		if err != nil {
-			w.Write([]byte("{\"error\": \"unable to add run\"}"))
+			encoder.Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
 		scheduler.DefaultScheduler.AddRun(runId)
+		runRes.Runs[runId] = repo.Repo
 	}
+
+	encoder.Encode(runRes)
 }
 
 // Delete given runner
 func DeleteRunHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"wrong id\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	run, err := mysql.Db.GetRun(int(id))
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"the run does not exist\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	runners.KillRun(run.Runner_id, id)
 
 	err = mysql.Db.UpdateRunStatus(id, "canceled")
+	encoder.Encode(map[string]string{"ok": "canceled"})
 }

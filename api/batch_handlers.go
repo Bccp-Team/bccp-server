@@ -9,32 +9,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type runInfo struct {
-	Id   int
-	Repo int
-}
-
-type batchInfo struct {
-	Id          int
-	Namespace   string
-	Init_script string
-	Update_time int
-	Timeout     int
-	Runs        map[string]([]runInfo)
-}
-
 // Get information about given batch
 func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		Namespace string `json:"namespace"`
+		Namespace string `json:namespace`
 	}
 
 	var req request
 
 	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
+
 	err := decoder.Decode(&req)
 	if err != nil {
-		//FIXME error
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
 	}
 
 	var namespace *string
@@ -45,24 +34,38 @@ func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	batchs := mysql.Db.ListBatchs(namespace)
-	encoder := json.NewEncoder(w)
 	encoder.Encode(batchs)
 }
 
 func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
+	type runInfo struct {
+		Id   int `json:id`
+		Repo int `json:repo`
+	}
+
+	type batchInfo struct {
+		Id          int                    `json:id`
+		Namespace   string                 `json:namespace`
+		Init_script string                 `json:init_script`
+		Update_time int                    `json:update_time`
+		Timeout     int                    `json:timeout`
+		Runs        map[string]([]runInfo) `json:runs`
+	}
+
 	vars := mux.Vars(r)
+	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"wrong id\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	batch, err := mysql.Db.GetBatch(int(id))
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"unable to get batch\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -74,7 +77,8 @@ func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 		runs, err := mysql.Db.ListRuns(map[string]string{"batch": string(id), "status": kind})
 
 		if err != nil {
-			w.Write([]byte("{\"error\": \"unable to get batch run\"}"))
+			encoder.Encode(map[string]string{"error": err.Error()})
+			return
 		}
 
 		runs_array := make([]runInfo, len(runs))
@@ -85,7 +89,6 @@ func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 		res.Runs[kind] = runs_array
 	}
-	encoder := json.NewEncoder(w)
 	encoder.Encode(res)
 }
 
@@ -96,24 +99,25 @@ func DeleteBatchHandler(w http.ResponseWriter, r *http.Request) {
 
 func AddBatchHandler(w http.ResponseWriter, r *http.Request) {
 	type runRequest struct {
-		Namespace  string
-		InitScript string
-		UpdateTime int
-		Timeout    int
+		Namespace  string `json:namespace`
+		InitScript string `json:init_script`
+		UpdateTime int    `json:update_time`
+		Timeout    int    `json:timeout`
 	}
 
 	var runReq runRequest
 
 	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
 	err := decoder.Decode(&runReq)
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"unable to parse request\"}"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	if runReq.Namespace == "" || runReq.InitScript == "" || runReq.UpdateTime <= 0 || runReq.Timeout <= 0 {
-		w.Write([]byte("{\"error\": \"missing fields\"}"))
+		encoder.Encode(map[string]string{"error": "missing fields"})
 		return
 	}
 
@@ -121,7 +125,9 @@ func AddBatchHandler(w http.ResponseWriter, r *http.Request) {
 		runReq.UpdateTime, runReq.Timeout)
 
 	if err != nil {
-		w.Write([]byte("{\"error\": \"unable to create batch\"}"))
+		encoder.Encode(map[string]string{"error": "missing fields"})
 		return
 	}
+
+	encoder.Encode(map[string]string{"ok": "created"})
 }

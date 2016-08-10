@@ -13,15 +13,17 @@ import (
 // List all runners
 func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		Status string `json:"status"`
+		Status string `json:status`
 	}
 
 	var req request
 
 	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
 	err := decoder.Decode(&req)
 	if err != nil {
-		//FIXME error
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
 	}
 
 	status := &req.Status
@@ -31,46 +33,46 @@ func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	runners := mysql.Db.ListRunners(status)
-	encoder := json.NewEncoder(w)
 	encoder.Encode(runners)
 }
 
 // Get information about given runner
 func GetRunnerByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("\"error\": \"wrong id\""))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	runner, err := mysql.Db.GetRunner(int(id))
 
 	if err != nil {
-		w.Write([]byte("\"error\": \"the runner does not exist\""))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	encoder := json.NewEncoder(w)
 	encoder.Encode(runner)
 }
 
 // Delete given runner
 func DeleteRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
-		w.Write([]byte("\"error\": \"wrong id\""))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	runners.KillRunner(id)
 
-	w.Write([]byte("\"ok\": \"killed\""))
+	encoder.Encode(map[string]string{"ok": "killed"})
 }
 
 // FIXME: we should do something clever to avoid race conditions

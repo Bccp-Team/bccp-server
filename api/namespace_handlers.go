@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/bccp-server/mysql"
 	"github.com/gorilla/mux"
@@ -12,67 +11,70 @@ import (
 // List all namespaces
 func GetNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	runs, err := mysql.Db.ListNamespaces()
+	encoder := json.NewEncoder(w)
 
 	if err != nil {
-		w.Write([]byte("{ \"error\" : \"unable to list namespaces\" }"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	encoder := json.NewEncoder(w)
 	encoder.Encode(runs)
 }
 
 // Get information about given namespace
 func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
-	namespace := strings.Split(r.URL.Path, "/")[2]
 	vars := mux.Vars(r)
+	encoder := json.NewEncoder(w)
 
-	namespace = vars["name"]
+	namespace := vars["name"]
 
 	repos, err := mysql.Db.GetNamespaceRepos(&namespace)
 
 	if err != nil {
-		w.Write([]byte("{ 'error' : 'unable to list namespaces' }"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	encoder := json.NewEncoder(w)
 	encoder.Encode(repos)
-}
-
-type namespace struct {
-	Name  string
-	Repos []struct {
-		Repo string
-		Ssh  string
-	}
 }
 
 // Add namespace
 func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
+	type namespace struct {
+		Name  string `json:namespace`
+		Repos []struct {
+			Repo string `json:repo`
+			Ssh  string `json:ssh`
+		} `json:repos`
+	}
+
 	var n namespace
 	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
+
 	err := decoder.Decode(&n)
 
 	if err != nil {
-		w.Write([]byte("{ \"error\" : \"unable to decode namespace\" }"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	err = mysql.Db.AddNamespace(n.Name)
 
 	if err != nil {
-		w.Write([]byte("{ \"error\" : \"unable to create namespace\" }"))
+		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	for _, repo := range n.Repos {
 		_, err = mysql.Db.AddRepoToNamespace(n.Name, repo.Repo, repo.Ssh)
 		if err != nil {
-			w.Write([]byte("{ \"error\" : \"unable to create repo\" }"))
+			encoder.Encode(map[string]string{"error": err.Error()})
 			return
 		}
 	}
+
+	encoder.Encode(map[string]string{"ok": "created"})
 }
 
 // Delete given namespace

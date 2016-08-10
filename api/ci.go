@@ -25,12 +25,15 @@ type GitRequest struct {
 
 func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 	var req GitRequest
+
 	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
+
 	err := decoder.Decode(&req)
 
 	if err != nil {
-		//FIXME
-		log.Printf(err.Error())
+		encoder.Encode(map[string]string{"error": err.Error()})
+		log.Printf("ERROR: api: ci: %v", err.Error())
 		return
 	}
 
@@ -41,25 +44,26 @@ func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 	batch, err := mysql.Db.GetLastBatchFromNamespace(namespace)
 
 	if err != nil {
-		//FIXME
-		log.Printf(err.Error())
+		encoder.Encode(map[string]string{"error": err.Error()})
+		log.Printf("ERROR: api: ci: %v", err.Error())
 		return
 	}
 
 	repo, err := mysql.Db.GetRepoFromName(req.Repository.Name, namespace)
 
 	if err != nil {
-		//FIXME
-		log.Printf(err.Error())
+		encoder.Encode(map[string]string{"error": err.Error()})
+		log.Printf("ERROR: api: ci: %v", err.Error())
 		return
 	}
 
 	runId, err := mysql.Db.AddRun(repo.Id, batch.Id)
 
 	if err != nil {
-		//FIXME
-		log.Printf(err.Error())
+		encoder.Encode(map[string]string{"error": err.Error()})
+		log.Printf("ERROR: api: ci: %v", err.Error())
 		return
 	}
+
 	scheduler.DefaultScheduler.AddRun(runId)
 }
