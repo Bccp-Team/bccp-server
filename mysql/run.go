@@ -1,8 +1,10 @@
 package mysql
 
 import (
+	"database/sql"
 	"log"
 	"strconv"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -16,15 +18,32 @@ type Run struct {
 }
 
 // List Runs
-func (db *Database) ListRuns() ([]Run, error) {
+func (db *Database) ListRuns(filter map[string]string) ([]Run, error) {
 
 	var id int
 	var status string
 	var runner_id int
 	var repo int
 	var logs string
+
+	var rows *sql.Rows
+	var err error
 	// Execute the query
-	rows, err := db.conn.Query("SELECT * FROM run")
+	if len(filter) == 0 {
+		rows, err = db.conn.Query("SELECT * FROM run")
+	} else {
+		req := "SELECT * FROM run WHERE "
+		f := make([]string, len(filter))
+		l := make([]string, 2*len(filter))
+		i := 0
+		for key := range filter {
+			f[i/2] = " ?=? "
+			l[i] = key
+			l[i+1] = filter[key]
+			i = i + 2
+		}
+		rows, err = db.conn.Query(req+strings.Join(f, "AND"), l)
+	}
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
 		return nil, err
@@ -60,41 +79,6 @@ func (db *Database) ListBatchRuns(batch_id int, s string) ([]Run, error) {
 	var logs string
 	// Execute the query
 	rows, err := db.conn.Query("SELECT run.id, run.status, run.runner, run.repo, run.logs FROM run JOIN batch_runs ON run.id = batch_runs.run WHERE batch=? AND status=?", batch_id, s)
-	if err != nil {
-		log.Print("ERROR: Unable to select run: ", err.Error())
-		return nil, err
-	}
-
-	var runs []Run
-
-	// Fetch rows
-	for rows.Next() {
-		// get RawBytes from data
-		err = rows.Scan(&id, &status, &runner_id, &repo, &logs)
-		if err != nil {
-			log.Print("ERROR: Unable to get next row: ", err.Error())
-			return nil, err
-		}
-
-		runs = append(runs, Run{id, status, runner_id, repo, logs})
-	}
-	if err = rows.Err(); err != nil {
-		log.Print("ERROR: Undefined row err: ", err.Error())
-		return runs, err
-	}
-
-	return runs, nil
-}
-
-func (db *Database) ListRunsByStatus(s string) ([]Run, error) {
-
-	var id int
-	var status string
-	var runner_id int
-	var repo int
-	var logs string
-	// Execute the query
-	rows, err := db.conn.Query("SELECT * FROM run WHERE status = ?", s)
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
 		return nil, err

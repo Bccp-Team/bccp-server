@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bccp-server/mysql"
+	"github.com/gorilla/mux"
 )
 
 // List all namespaces
@@ -24,7 +25,11 @@ func GetNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 // Get information about given namespace
 func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
 	namespace := strings.Split(r.URL.Path, "/")[2]
-	repos, err := mysql.Db.GetNamespaceRepos(namespace)
+	vars := mux.Vars(r)
+
+	namespace = vars["name"]
+
+	repos, err := mysql.Db.GetNamespaceRepos(&namespace)
 
 	if err != nil {
 		w.Write([]byte("{ 'error' : 'unable to list namespaces' }"))

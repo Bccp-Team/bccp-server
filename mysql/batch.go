@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"database/sql"
 	"log"
 	"strconv"
 
@@ -15,10 +16,16 @@ type Batch struct {
 	Timeout     int
 }
 
-func (db *Database) ListBatchs() []Batch {
+func (db *Database) ListBatchs(namespace *string) []Batch {
+	var rows *sql.Rows
+	var err error
 
+	if namespace == nil {
+		rows, err = db.conn.Query("SELECT * FROM batch")
+	} else {
+		rows, err = db.conn.Query("SELECT * FROM batch where namespace=?", namespace)
+	}
 	// Execute the query
-	rows, err := db.conn.Query("SELECT * FROM batch")
 	if err != nil {
 		log.Fatal("ERROR: Unable to select batch: ", err.Error())
 	}

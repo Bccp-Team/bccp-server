@@ -56,7 +56,7 @@ func (db *Database) AddNamespace(namespace string) error {
 }
 
 func (db *Database) DeleteNamespace(namespace string) error {
-	repos, err := db.GetNamespaceRepos(namespace)
+	repos, err := db.GetNamespaceRepos(&namespace)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare delete namespace: ", err.Error())
 		return err

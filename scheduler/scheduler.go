@@ -28,7 +28,7 @@ func (sched *Scheduler) Start() {
 	sched.runRequests = make(chan int, 4096)
 	sched.waitingRunners = make(chan int, 4096)
 
-	runs, err := mysql.Db.ListRunsByStatus("waiting")
+	runs, err := mysql.Db.ListRuns(map[string]string{"status": "waiting"})
 
 	if err != nil {
 		//FIXME

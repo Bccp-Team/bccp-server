@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"database/sql"
 	"log"
 	"strconv"
 	"time"
@@ -15,10 +16,17 @@ type Runner struct {
 	Ip              string
 }
 
-func (db *Database) ListRunners() []Runner {
+func (db *Database) ListRunners(status *string) []Runner {
+	var rows *sql.Rows
+	var err error
 
 	// Execute the query
-	rows, err := db.conn.Query("SELECT * FROM runner")
+	if status == nil {
+		rows, err = db.conn.Query("SELECT * FROM runner")
+	} else {
+		rows, err = db.conn.Query("SELECT * FROM runner WHERE status=?", status)
+	}
+
 	if err != nil {
 		log.Fatal("ERROR: Unable to select runner: ", err.Error())
 	}
@@ -39,6 +47,7 @@ func (db *Database) ListRunners() []Runner {
 
 		runners = append(runners, Runner{id, status, last_connection, ip})
 	}
+
 	if err = rows.Err(); err != nil {
 		log.Fatal("ERROR: Undefined row err: ", err.Error())
 	}

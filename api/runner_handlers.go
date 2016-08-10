@@ -12,7 +12,25 @@ import (
 
 // List all runners
 func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
-	runners := mysql.Db.ListRunners()
+	type request struct {
+		Status string `json:"status"`
+	}
+
+	var req request
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&req)
+	if err != nil {
+		//FIXME error
+	}
+
+	status := &req.Status
+
+	if len(req.Status) == 0 {
+		status = nil
+	}
+
+	runners := mysql.Db.ListRunners(status)
 	encoder := json.NewEncoder(w)
 	encoder.Encode(runners)
 }

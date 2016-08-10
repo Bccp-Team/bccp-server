@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"database/sql"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -48,14 +49,23 @@ type Repo struct {
 }
 
 // Get namespace's repos
-func (db *Database) GetNamespaceRepos(name string) ([]Repo, error) {
+func (db *Database) GetNamespaceRepos(name *string) ([]Repo, error) {
 
 	var repo string
 	var ssh string
 	var id int
+
+	var rows *sql.Rows
+	var err error
+
 	// Execute the query
-	req := "SELECT id, repo, ssh FROM namespace_repos where namespace='" + name + "'"
-	rows, err := db.conn.Query(req)
+	if name == nil {
+		req := "SELECT id, repo, ssh FROM namespace_repos"
+		rows, err = db.conn.Query(req)
+	} else {
+		req := "SELECT id, repo, ssh FROM namespace_repos where namespace=?"
+		rows, err = db.conn.Query(req, *name)
+	}
 	if err != nil {
 		log.Print("ERROR: Unable to select namespace repos: ", err.Error())
 		return nil, err

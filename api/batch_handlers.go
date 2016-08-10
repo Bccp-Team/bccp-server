@@ -25,7 +25,26 @@ type batchInfo struct {
 
 // Get information about given batch
 func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
-	batchs := mysql.Db.ListBatchs()
+	type request struct {
+		Namespace string `json:"namespace"`
+	}
+
+	var req request
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&req)
+	if err != nil {
+		//FIXME error
+	}
+
+	var namespace *string
+	if len(req.Namespace) == 0 {
+		namespace = nil
+	} else {
+		namespace = &req.Namespace
+	}
+
+	batchs := mysql.Db.ListBatchs(namespace)
 	encoder := json.NewEncoder(w)
 	encoder.Encode(batchs)
 }

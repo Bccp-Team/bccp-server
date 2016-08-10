@@ -13,7 +13,34 @@ import (
 
 // List all run
 func GetRunHandler(w http.ResponseWriter, r *http.Request) {
-	runs, err := mysql.Db.ListRuns()
+	type request struct {
+		Status string `json:"status"`
+		Runner string `json:"runner"`
+		Repo   string `json:"repo"`
+	}
+
+	var req request
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&req)
+
+	if err != nil {
+		//FIXME error
+	}
+
+	filter := make(map[string]string)
+
+	if len(req.Status) > 0 {
+		filter["status"] = req.Status
+	}
+	if len(req.Runner) > 0 {
+		filter["runner"] = req.Runner
+	}
+	if len(req.Repo) > 0 {
+		filter["repo"] = req.Repo
+	}
+
+	runs, err := mysql.Db.ListRuns(filter)
 
 	if err != nil {
 		w.Write([]byte("{ \"error\" : \"unable to list runs\" }"))
@@ -22,23 +49,6 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 
 	encoder := json.NewEncoder(w)
 	encoder.Encode(runs)
-}
-
-func GetActiveRunHandler(w http.ResponseWriter, r *http.Request) {
-	runs, err := mysql.Db.ListRunsByStatus("running")
-
-	if err != nil {
-		w.Write([]byte("{ \"error\" : \"unable to list runs\" }"))
-		return
-	}
-	runs_aux, err := mysql.Db.ListRunsByStatus("waiting")
-	if err != nil {
-		w.Write([]byte("{ \"error\" : \"unable to list runs\" }"))
-		return
-	}
-
-	encoder := json.NewEncoder(w)
-	encoder.Encode(append(runs, runs_aux...))
 }
 
 // Get information about given run
@@ -96,7 +106,7 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repos, err := mysql.Db.GetNamespaceRepos(runReq.Namespace)
+	repos, err := mysql.Db.GetNamespaceRepos(&runReq.Namespace)
 
 	if err != nil {
 		w.Write([]byte("{\"error\": \"unable to list repos\"}"))
