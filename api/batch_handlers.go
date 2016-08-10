@@ -71,7 +71,7 @@ func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, kind := range []string{"waiting", "running", "canceled",
 		"finished", "failed", "timeout"} {
-		runs, err := mysql.Db.ListBatchRuns(id, kind)
+		runs, err := mysql.Db.ListRuns(map[string]string{"batch": string(id), "status": kind})
 
 		if err != nil {
 			w.Write([]byte("{\"error\": \"unable to get batch run\"}"))

@@ -54,15 +54,12 @@ func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	runId, err := mysql.Db.AddRun(repo.Id)
+	runId, err := mysql.Db.AddRun(repo.Id, batch.Id)
 
 	if err != nil {
 		//FIXME
 		log.Printf(err.Error())
 		return
 	}
-
-	err = mysql.Db.AddBatchRun(batch.Id, runId)
-
 	scheduler.DefaultScheduler.AddRun(runId)
 }

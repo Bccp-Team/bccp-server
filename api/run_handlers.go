@@ -98,7 +98,7 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := mysql.Db.AddBatch(runReq.Namespace, runReq.InitScript,
+	batch_id, err := mysql.Db.AddBatch(runReq.Namespace, runReq.InitScript,
 		runReq.UpdateTime, runReq.Timeout)
 
 	if err != nil {
@@ -114,16 +114,9 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, repo := range repos {
-		runId, err := mysql.Db.AddRun(repo.Id)
+		runId, err := mysql.Db.AddRun(repo.Id, batch_id)
 		if err != nil {
 			w.Write([]byte("{\"error\": \"unable to add run\"}"))
-			return
-		}
-
-		err = mysql.Db.AddBatchRun(id, runId)
-
-		if err != nil {
-			w.Write([]byte("{\"error\": \"unable to add batch/run\"}"))
 			return
 		}
 

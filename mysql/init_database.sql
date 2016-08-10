@@ -51,20 +51,12 @@ create table run
 	status	varchar(16)	not null default 'waiting'
 				check (status in ('waiting', 'running',
 				'canceled', 'finished', 'failed', 'timeout')),
-	runner	bigint unsigned,
-	repo    bigint unsigned,
+	runner	bigint unsigned not null,
+	repo    bigint unsigned not null,
+	batch	bigint unsigned	not null,
 	logs	text		not null,
 	primary key (id),
 	foreign key(repo) references namespace_repos(id)
---	foreign key(runner) references runner(id)
-);
-
-create table batch_runs
-(
-	id		serial		not null,
-	batch		bigint unsigned	not null,
-	run		bigint unsigned	not null unique,
-	primary key (id),
 	foreign key(batch) references batch(id),
-	foreign key(run) references run(id)
+--	foreign key(runner) references runner(id)
 );

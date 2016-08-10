@@ -14,6 +14,7 @@ type Run struct {
 	Status    string
 	Runner_id int
 	Repo      int
+	Batch     int
 	Logs      string
 }
 
@@ -24,6 +25,7 @@ func (db *Database) ListRuns(filter map[string]string) ([]Run, error) {
 	var status string
 	var runner_id int
 	var repo int
+	var batch int
 	var logs string
 
 	var rows *sql.Rows
@@ -54,48 +56,13 @@ func (db *Database) ListRuns(filter map[string]string) ([]Run, error) {
 	// Fetch rows
 	for rows.Next() {
 		// get RawBytes from data
-		err = rows.Scan(&id, &status, &runner_id, &repo, &logs)
+		err = rows.Scan(&id, &status, &runner_id, &repo, &batch, &logs)
 		if err != nil {
 			log.Print("ERROR: Unable to get next row: ", err.Error())
 			return nil, err
 		}
 
-		runs = append(runs, Run{id, status, runner_id, repo, logs})
-	}
-	if err = rows.Err(); err != nil {
-		log.Print("ERROR: Undefined row err: ", err.Error())
-		return runs, err
-	}
-
-	return runs, nil
-}
-
-func (db *Database) ListBatchRuns(batch_id int, s string) ([]Run, error) {
-
-	var id int
-	var status string
-	var runner_id int
-	var repo int
-	var logs string
-	// Execute the query
-	rows, err := db.conn.Query("SELECT run.id, run.status, run.runner, run.repo, run.logs FROM run JOIN batch_runs ON run.id = batch_runs.run WHERE batch=? AND status=?", batch_id, s)
-	if err != nil {
-		log.Print("ERROR: Unable to select run: ", err.Error())
-		return nil, err
-	}
-
-	var runs []Run
-
-	// Fetch rows
-	for rows.Next() {
-		// get RawBytes from data
-		err = rows.Scan(&id, &status, &runner_id, &repo, &logs)
-		if err != nil {
-			log.Print("ERROR: Unable to get next row: ", err.Error())
-			return nil, err
-		}
-
-		runs = append(runs, Run{id, status, runner_id, repo, logs})
+		runs = append(runs, Run{id, status, runner_id, repo, batch, logs})
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -112,6 +79,7 @@ func (db *Database) GetRun(run_id int) (*Run, error) {
 	var status string
 	var runner_id int
 	var repo int
+	var batch int
 	var logs string
 	// Execute the query
 	req := "SELECT * FROM run WHERE run.id='" + strconv.Itoa(run_id) + "'"
@@ -121,7 +89,7 @@ func (db *Database) GetRun(run_id int) (*Run, error) {
 		return nil, err
 	}
 
-	return &Run{id, status, runner_id, repo, logs}, nil
+	return &Run{id, status, runner_id, repo, batch, logs}, nil
 }
 
 // Launch run
@@ -167,8 +135,8 @@ func (db *Database) UpdateRunStatus(id int, state string) error {
 	return nil
 }
 
-func (db *Database) AddRun(depo int) (int, error) {
-	req := "INSERT INTO run VALUES(NULL,'waiting',-1,?, '')"
+func (db *Database) AddRun(depo int, batch int) (int, error) {
+	req := "INSERT INTO run VALUES(NULL,'waiting',-1,?,?,'')"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
@@ -176,7 +144,7 @@ func (db *Database) AddRun(depo int) (int, error) {
 	}
 	defer insert.Close()
 
-	res, err := insert.Exec(depo)
+	res, err := insert.Exec(depo, batch)
 	if err != nil {
 		log.Print("ERROR: Unable to insert run: ", err.Error())
 		return -1, err
