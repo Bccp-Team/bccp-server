@@ -36,15 +36,16 @@ func (db *Database) ListRuns(filter map[string]string) ([]Run, error) {
 	} else {
 		req := "SELECT * FROM run WHERE "
 		f := make([]string, len(filter))
-		l := make([]string, 2*len(filter))
 		i := 0
-		for key := range filter {
-			f[i/2] = " ?=? "
-			l[i] = key
-			l[i+1] = filter[key]
-			i = i + 2
+		l := make([]interface{}, len(filter))
+		for key, value := range filter {
+			//Here we trust that keys are legit
+			f[i] = key + "=?"
+			l[i] = value
+			i = i + 1
 		}
-		rows, err = db.conn.Query(req+strings.Join(f, "AND"), l)
+		log.Print(req + strings.Join(f, " AND "))
+		rows, err = db.conn.Query(req+strings.Join(f, " AND "), l...)
 	}
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
@@ -83,7 +84,7 @@ func (db *Database) GetRun(run_id int) (*Run, error) {
 	var logs string
 	// Execute the query
 	req := "SELECT * FROM run WHERE run.id='" + strconv.Itoa(run_id) + "'"
-	err := db.conn.QueryRow(req).Scan(&id, &status, &runner_id, &repo, &logs)
+	err := db.conn.QueryRow(req).Scan(&id, &status, &runner_id, &repo, &batch, &logs)
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
 		return nil, err

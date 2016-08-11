@@ -56,7 +56,7 @@ create table run
 	batch	bigint unsigned	not null,
 	logs	text		not null,
 	primary key (id),
-	foreign key(repo) references namespace_repos(id)
-	foreign key(batch) references batch(id),
+	foreign key(repo) references namespace_repos(id),
+	foreign key(batch) references batch(id)
 --	foreign key(runner) references runner(id)
 );
