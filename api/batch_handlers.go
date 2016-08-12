@@ -37,6 +37,33 @@ func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(batchs)
 }
 
+func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		Namespace string `json:namespace`
+	}
+
+	var req request
+
+	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
+
+	err := decoder.Decode(&req)
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	var namespace *string
+	if len(req.Namespace) == 0 {
+		namespace = nil
+	} else {
+		namespace = &req.Namespace
+	}
+
+	batchs := mysql.Db.ListActiveBatchs(namespace)
+	encoder.Encode(batchs)
+}
+
 func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 	type runInfo struct {
 		Id   int `json:id`

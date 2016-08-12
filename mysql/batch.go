@@ -54,6 +54,44 @@ func (db *Database) ListBatchs(namespace *string) []Batch {
 	return batchs
 }
 
+func (db *Database) ListActiveBatchs(namespace *string) []Batch {
+	var rows *sql.Rows
+	var err error
+
+	if namespace == nil {
+		rows, err = db.conn.Query("SELECT * FROM batch WHERE EXISTS(SELECT * FROM run WHERE run.batch = batch.id AND run.status IN ('waiting', 'running'))")
+	} else {
+		rows, err = db.conn.Query("SELECT * FROM batch WHERE namespace=? AND EXISTS(SELECT * FROM run WHERE run.batch = batch.id AND run.status IN ('waiting', 'running'))", namespace)
+	}
+	// Execute the query
+	if err != nil {
+		log.Fatal("ERROR: Unable to select batch: ", err.Error())
+	}
+
+	var batchs []Batch
+
+	// Fetch rows
+	for rows.Next() {
+		var id int
+		var namespace string
+		var init_script string
+		var update_time int
+		var timeout int
+		// get RawBytes from data
+		err = rows.Scan(&id, &namespace, &init_script, &update_time, &timeout)
+		if err != nil {
+			log.Fatal("ERROR: Unable to get next row: ", err.Error())
+		}
+
+		batchs = append(batchs, Batch{id, namespace, init_script, update_time, timeout})
+	}
+	if err = rows.Err(); err != nil {
+		log.Fatal("ERROR: Undefined row err: ", err.Error())
+	}
+
+	return batchs
+}
+
 func (db *Database) GetBatch(id int) (*Batch, error) {
 
 	var b_id int
