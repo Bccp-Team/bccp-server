@@ -39,6 +39,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crt_file string, key_file s
 	get_api.HandleFunc("/namespace", GetNamespaceHandler)
 	get_api.HandleFunc("/namespace/{name:[--~]+}", GetNamespaceByNameHandler)
 	put_api.HandleFunc("/namespace", PutNamespaceHandler)
+	del_api.HandleFunc("/namespace/{name:[--~]+}", AddRepoHandler)
 	del_api.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
 
 	pst_api.HandleFunc("/ci/{namespace:[--~]+}", PostCommitHandler)

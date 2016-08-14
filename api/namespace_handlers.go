@@ -38,14 +38,16 @@ func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(repos)
 }
 
+type repo struct {
+	Repo string `json:repo`
+	Ssh  string `json:ssh`
+}
+
 // Add namespace
 func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	type namespace struct {
 		Name  string `json:namespace`
-		Repos []struct {
-			Repo string `json:repo`
-			Ssh  string `json:ssh`
-		} `json:repos`
+		Repos []repo `json:repos`
 	}
 
 	var n namespace
@@ -72,6 +74,31 @@ func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 			encoder.Encode(map[string]string{"error": err.Error()})
 			return
 		}
+	}
+
+	encoder.Encode(map[string]string{"ok": "created"})
+}
+func AddRepoHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	encoder := json.NewEncoder(w)
+	decoder := json.NewDecoder(r.Body)
+
+	namespace := vars["name"]
+
+	var rep repo
+
+	err := decoder.Decode(&rep)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	_, err = mysql.Db.AddRepoToNamespace(namespace, rep.Repo, rep.Ssh)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
 	}
 
 	encoder.Encode(map[string]string{"ok": "created"})
