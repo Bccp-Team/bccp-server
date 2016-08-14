@@ -75,6 +75,24 @@ func GetRunByIdHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(run)
 }
 
+func PutRunRepoHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	encoder := json.NewEncoder(w)
+
+	batch_id, _ := strconv.Atoi(vars["batch_id"])
+	repo_id, _ := strconv.Atoi(vars["repo_id"])
+
+	runId, err := mysql.Db.AddRun(repo_id, batch_id)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	scheduler.DefaultScheduler.AddRun(runId)
+	encoder.Encode(map[string]string{"ok": string(runId)})
+}
+
 // Add run
 
 func PutRunHandler(w http.ResponseWriter, r *http.Request) {

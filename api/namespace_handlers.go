@@ -94,14 +94,14 @@ func AddRepoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = mysql.Db.AddRepoToNamespace(namespace, rep.Repo, rep.Ssh)
+	id, err := mysql.Db.AddRepoToNamespace(namespace, rep.Repo, rep.Ssh)
 
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	encoder.Encode(map[string]string{"ok": "created"})
+	encoder.Encode(map[string]string{"ok": string(id)})
 }
 
 // Delete given namespace
