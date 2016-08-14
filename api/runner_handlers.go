@@ -14,6 +14,7 @@ import (
 func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
 		Status string `json:status`
+		Name   string `json:name`
 	}
 
 	var req request
@@ -26,13 +27,16 @@ func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status := &req.Status
+	filter := make(map[string]string)
 
-	if len(req.Status) == 0 {
-		status = nil
+	if len(req.Status) > 0 {
+		filter["status"] = req.Status
+	}
+	if len(req.Name) > 0 {
+		filter["name"] = req.Name
 	}
 
-	runners := mysql.Db.ListRunners(status)
+	runners := mysql.Db.ListRunners(filter)
 	encoder.Encode(runners)
 }
 

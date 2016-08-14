@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -11,20 +12,31 @@ import (
 
 type Runner struct {
 	Id              int
+	Name            string
 	Status          string
 	Last_connection time.Time
 	Ip              string
 }
 
-func (db *Database) ListRunners(status *string) []Runner {
+func (db *Database) ListRunners(filter map[string]string) []Runner {
 	var rows *sql.Rows
 	var err error
 
 	// Execute the query
-	if status == nil {
+	if len(filter) == 0 {
 		rows, err = db.conn.Query("SELECT * FROM runner")
 	} else {
-		rows, err = db.conn.Query("SELECT * FROM runner WHERE status=?", status)
+		req := "SELECT * FROM runner WHERE "
+		f := make([]string, len(filter))
+		i := 0
+		l := make([]interface{}, len(filter))
+		for key, value := range filter {
+			//Here we trust that keys are legit
+			f[i] = key + "=?"
+			l[i] = value
+			i = i + 1
+		}
+		rows, err = db.conn.Query(req+strings.Join(f, " AND "), l...)
 	}
 
 	if err != nil {
@@ -36,16 +48,17 @@ func (db *Database) ListRunners(status *string) []Runner {
 	// Fetch rows
 	for rows.Next() {
 		var id int
+		var name string
 		var status string
 		var last_connection time.Time
 		var ip string
 		// get RawBytes from data
-		err = rows.Scan(&id, &status, &last_connection, &ip)
+		err = rows.Scan(&id, &name, &status, &last_connection, &ip)
 		if err != nil {
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		runners = append(runners, Runner{id, status, last_connection, ip})
+		runners = append(runners, Runner{id, name, status, last_connection, ip})
 	}
 
 	if err = rows.Err(); err != nil {
@@ -62,28 +75,29 @@ func (db *Database) ListRunners(status *string) []Runner {
 func (db *Database) GetRunner(runner_id int) (*Runner, error) {
 
 	var id int
+	var name string
 	var status string
 	var last_connection time.Time
 	var ip string
 	// Execute the query
 	req := "SELECT * FROM runner WHERE runner.id='" + strconv.Itoa(runner_id) + "'"
-	err := db.conn.QueryRow(req).Scan(&id, &status, &last_connection, &ip)
+	err := db.conn.QueryRow(req).Scan(&id, &name, &status, &last_connection, &ip)
 	if err != nil {
 		log.Print("ERROR: Unable to select runner: ", err.Error())
 		return nil, err
 	}
 
-	return &Runner{id, status, last_connection, ip}, nil
+	return &Runner{id, name, status, last_connection, ip}, nil
 }
 
 // Add runner
 // Return:
 // - Runner id if succes
 // - -1 elsewhere
-func (db *Database) AddRunner(ip string) (int, error) {
+func (db *Database) AddRunner(ip string, name string) (int, error) {
 
 	// Prepare statement for inserting data
-	req := "INSERT INTO runner VALUES(NULL,'waiting',NULL,'" + ip + "')"
+	req := "INSERT INTO runner VALUES(NULL, ?, 'waiting', NULL, ?)"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
@@ -91,7 +105,7 @@ func (db *Database) AddRunner(ip string) (int, error) {
 	}
 	defer insert.Close()
 
-	res, err := insert.Exec()
+	res, err := insert.Exec(name, name)
 	if err != nil {
 		log.Print("ERROR: Unable to insert runner: ", err.Error())
 		return -1, err

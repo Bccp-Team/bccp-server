@@ -19,7 +19,6 @@ var (
 )
 
 func WaitRunners(isched ischeduler.IScheduler, service string, token string) {
-
 	runnerMaps = make(map[int]*clientInfo)
 	sched = isched
 	log.Printf(service)
@@ -77,12 +76,13 @@ func handleClient(conn net.Conn, token *string) {
 		return
 	}
 
-	uid, err := mysql.Db.AddRunner(conn.RemoteAddr().String())
+	uid, err := mysql.Db.AddRunner(conn.RemoteAddr().String(), connection.Name)
 
 	if err != nil {
 		log.Printf("WARNING: runner: %v: failed to add runner: %v", conn.RemoteAddr(), err.Error())
 		return
 	}
+
 	defer mysql.Db.UpdateRunner(uid, "dead")
 
 	answer := message.SubscribeAnswer{ClientUID: uid}
@@ -97,6 +97,7 @@ func handleClient(conn net.Conn, token *string) {
 	client := &clientInfo{uid: uid, conn: conn, encoder: encoder, decoder: decoder}
 
 	runnerMaps[uid] = client
+
 	for i := 0; i < connection.Concurrency; i = i + 1 {
 		sched.AddRunner(uid)
 	}

@@ -10,6 +10,7 @@ set foreign_key_checks = 1;
 create table runner
 (
 	id		serial,
+	name            varchar(32)	not null default 'no_name'
 	status		varchar(16)	not null default 'waiting'
 					check (status in ('waiting', 'running', 'paused', 'dead')),
 	last_conn	timestamp	default current_timestamp

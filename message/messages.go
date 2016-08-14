@@ -12,6 +12,7 @@ const (
 
 type SubscribeRequest struct {
 	Token       string
+	Name        string
 	Concurrency int
 }
 

@@ -44,7 +44,6 @@ func (db *Database) ListRuns(filter map[string]string) ([]Run, error) {
 			l[i] = value
 			i = i + 1
 		}
-		log.Print(req + strings.Join(f, " AND "))
 		rows, err = db.conn.Query(req+strings.Join(f, " AND "), l...)
 	}
 	if err != nil {
