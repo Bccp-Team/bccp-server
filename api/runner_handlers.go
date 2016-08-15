@@ -13,8 +13,8 @@ import (
 // List all runners
 func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		Status string `json:status`
-		Name   string `json:name`
+		Status string `json:"status"`
+		Name   string `json:"name"`
 	}
 
 	var req request

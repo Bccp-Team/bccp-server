@@ -12,13 +12,13 @@ import (
 
 type GitRequest struct {
 	Repository struct {
-		Name        string `json:name`
-		Url         string `json:url`
-		Description string `json:description`
-		Homepage    string `json:homepage`
-		Http        string `json:git_http_url`
-		Ssh         string `json:git_ssh_url`
-		Visibility  int    `json:visibility_level`
+		Name        string `json:"name"`
+		Url         string `json:"url"`
+		Description string `json:"description"`
+		Homepage    string `json:"homepage"`
+		Http        string `json:"git_http_url"`
+		Ssh         string `json:"git_ssh_url"`
+		Visibility  int    `json:"visibility_level"`
 	} `json:repository`
 	Ref string
 }

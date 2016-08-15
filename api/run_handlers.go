@@ -14,9 +14,9 @@ import (
 // List all run
 func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		Status string `json:status`
-		Runner string `json:runner`
-		Repo   string `json:repo`
+		Status string `json:"status"`
+		Runner string `json:"runner"`
+		Repo   string `json:"repo"`
 	}
 
 	var req request
@@ -97,15 +97,15 @@ func PutRunRepoHandler(w http.ResponseWriter, r *http.Request) {
 
 func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	type runRequest struct {
-		Namespace  string `json:namespace`
-		InitScript string `json:init_script`
-		UpdateTime int    `json:update_time`
-		Timeout    int    `json:timeout`
+		Namespace  string `json:"namespace"`
+		InitScript string `json:"init_script"`
+		UpdateTime int    `json:"update_time"`
+		Timeout    int    `json:"timeout"`
 	}
 
 	type runResult struct {
-		Id   int            `json:id`
-		Runs map[int]string `json:runs`
+		Id   int            `json:"id"`
+		Runs map[int]string `json:"runs"`
 	}
 
 	var runReq runRequest

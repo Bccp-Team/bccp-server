@@ -12,7 +12,7 @@ import (
 // Get information about given batch
 func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		Namespace string `json:namespace`
+		Namespace string `json:"namespace"`
 	}
 
 	var req request
@@ -39,7 +39,7 @@ func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		Namespace string `json:namespace`
+		Namespace string `json:"namespace"`
 	}
 
 	var req request
@@ -66,17 +66,17 @@ func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 	type runInfo struct {
-		Id   int `json:id`
-		Repo int `json:repo`
+		Id   int `json:"id"`
+		Repo int `json:"repo"`
 	}
 
 	type batchInfo struct {
-		Id          int                    `json:id`
-		Namespace   string                 `json:namespace`
-		Init_script string                 `json:init_script`
-		Update_time int                    `json:update_time`
-		Timeout     int                    `json:timeout`
-		Runs        map[string]([]runInfo) `json:runs`
+		Id          int                    `json:"id"`
+		Namespace   string                 `json:"namespace"`
+		Init_script string                 `json:"init_script"`
+		Update_time int                    `json:"update_time"`
+		Timeout     int                    `json:"timeout"`
+		Runs        map[string]([]runInfo) `json:"runs"`
 	}
 
 	vars := mux.Vars(r)
@@ -126,10 +126,10 @@ func DeleteBatchHandler(w http.ResponseWriter, r *http.Request) {
 
 func AddBatchHandler(w http.ResponseWriter, r *http.Request) {
 	type runRequest struct {
-		Namespace  string `json:namespace`
-		InitScript string `json:init_script`
-		UpdateTime int    `json:update_time`
-		Timeout    int    `json:timeout`
+		Namespace  string `json:"namespace"`
+		InitScript string `json:"init_script"`
+		UpdateTime int    `json:"update_time"`
+		Timeout    int    `json:"timeout"`
 	}
 
 	var runReq runRequest

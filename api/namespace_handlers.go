@@ -39,15 +39,15 @@ func GetNamespaceByNameHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type repo struct {
-	Repo string `json:repo`
-	Ssh  string `json:ssh`
+	Repo string `json:"repo"`
+	Ssh  string `json:"ssh"`
 }
 
 // Add namespace
 func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	type namespace struct {
-		Name  string `json:namespace`
-		Repos []repo `json:repos`
+		Name  string `json:"namespace"`
+		Repos []repo `json:"repos"`
 	}
 
 	var n namespace
