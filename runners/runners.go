@@ -113,11 +113,11 @@ func handleClient(conn net.Conn, token *string) {
 
 		switch clientReq.Kind {
 		case message.Ack:
-			ack(uid)
+			client.ack()
 		case message.Finish:
-			finish(uid, clientReq.JobId, clientReq.Status)
+			client.finish(clientReq.JobId, clientReq.Status)
 		case message.Logs:
-			logs(uid, clientReq.JobId, clientReq.Logs)
+			client.logs(clientReq.JobId, clientReq.Logs)
 		case message.Error:
 			log.Printf("WARNING: runner: %v: receive error: %v", conn.RemoteAddr(), clientReq.Message)
 		default:
@@ -233,33 +233,74 @@ func PingRunner(uid int) error {
 	return nil
 }
 
-func ack(uid int) {
-	r, err := mysql.Db.GetRunner(uid)
+func (client *clientInfo) ack() {
+	r, err := mysql.Db.GetRunner(client.uid)
 	if err != nil {
-		log.Printf("WARNING: runner: ack on unknow runner %v: %v", uid, err.Error())
+		log.Printf("WARNING: runner: ack on unknow runner %v: %v", client.uid, err.Error())
 		return
 	}
 	err = mysql.Db.UpdateRunner(r.Id, r.Status)
 	if err != nil {
-		log.Printf("WARNING: runner: can't update runner %v: %v", uid, err.Error())
+		log.Printf("WARNING: runner: can't update runner %v: %v", client.uid, err.Error())
 	}
 }
 
-func finish(uid int, jobId int, status string) {
-	err := mysql.Db.UpdateRunStatus(jobId, status)
+func (client *clientInfo) finish(jobId int, status string) {
+	run, err := mysql.Db.GetRun(jobId)
+
 	if err != nil {
-		log.Printf("WARNING: runner: update on unknow run %v: %v", jobId, err.Error())
-	}
-	err = mysql.Db.UpdateRunner(uid, "waiting")
-	if err != nil {
-		log.Printf("WARNING: runner: update on unknow runner %v: %v", uid, err.Error())
+		log.Printf("WARNING: runner: update on unknow run %v - %v: %v", client.uid, jobId, err.Error())
+		KillRunner(client.uid)
 		return
 	}
-	sched.AddRunner(uid)
+
+	if run.Runner_id != client.uid {
+		log.Printf("WARNING: runner: runner update wrong run %v: %v", client.uid, jobId, err.Error())
+		KillRunner(client.uid)
+		return
+	}
+
+	if run.Status == "running" {
+		err = mysql.Db.UpdateRunStatus(jobId, status)
+
+		if err != nil {
+			log.Printf("WARNING: runner: update on unknow run %v: %v", jobId, err.Error())
+		}
+	}
+
+	err = mysql.Db.UpdateRunner(client.uid, "waiting")
+
+	if err != nil {
+		log.Printf("WARNING: runner: update on unknow runner %v: %v", client.uid, err.Error())
+		KillRunner(client.uid)
+		return
+	}
+
+	sched.AddRunner(client.uid)
 }
 
-func logs(uid int, jobId int, logs []string) {
-	err := mysql.Db.UpdateRunLogs(jobId, strings.Join(logs, "\n")+"\n")
+func (client *clientInfo) logs(jobId int, logs []string) {
+	run, err := mysql.Db.GetRun(jobId)
+
+	if err != nil {
+		log.Printf("WARNING: runner: update on unknow run %v - %v: %v", client.uid, jobId, err.Error())
+		KillRunner(client.uid)
+		return
+	}
+
+	if run.Runner_id != client.uid {
+		log.Printf("WARNING: runner: runner update wrong run %v: %v", client.uid, jobId, err.Error())
+		KillRunner(client.uid)
+		return
+	}
+
+	if run.Status != "running" {
+		//FIXME logs
+		return
+	}
+
+	err = mysql.Db.UpdateRunLogs(jobId, strings.Join(logs, "\n")+"\n")
+
 	if err != nil {
 		log.Printf("WARNING: runner: update on unknow run %v: %v", jobId, err.Error())
 	}

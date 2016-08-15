@@ -177,7 +177,9 @@ func DeleteRunHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	runners.KillRun(run.Runner_id, id)
+	if run.Runner_id != 0 {
+		runners.KillRun(run.Runner_id, id)
+	}
 
 	err = mysql.Db.UpdateRunStatus(id, "canceled")
 	encoder.Encode(map[string]string{"ok": "canceled"})
