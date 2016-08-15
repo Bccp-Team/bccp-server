@@ -9,11 +9,11 @@ import (
 )
 
 type Batch struct {
-	Id          int
-	Namespace   string
-	Init_script string
-	Update_time int
-	Timeout     int
+	Id          int    `json:"id"`
+	Namespace   string `json:"namespace"`
+	Init_script string `json:"init_script"`
+	Update_time int    `json:"update_time"`
+	Timeout     int    `json:"timeout"`
 }
 
 func (db *Database) ListBatchs(namespace *string) []Batch {

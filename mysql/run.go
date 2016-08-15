@@ -10,12 +10,12 @@ import (
 )
 
 type Run struct {
-	Id        int
-	Status    string
-	Runner_id int
-	Repo      int
-	Batch     int
-	Logs      string
+	Id        int    `json:"id"`
+	Status    string `json:"status"`
+	Runner_id int    `json:"runner_id"`
+	Repo      int    `json:"repo"`
+	Batch     int    `json:"batch`
+	Logs      string `json:"logs"`
 }
 
 // List Runs

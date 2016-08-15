@@ -11,11 +11,11 @@ import (
 )
 
 type Runner struct {
-	Id              int
-	Name            string
-	Status          string
-	Last_connection time.Time
-	Ip              string
+	Id              int       `json:"id"`
+	Name            string    `json:"name"`
+	Status          string    `json:"status"`
+	Last_connection time.Time `json:"last_connection"`
+	Ip              string    `json:"ip"`
 }
 
 func (db *Database) ListRunners(filter map[string]string) []Runner {

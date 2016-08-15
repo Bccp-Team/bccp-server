@@ -43,9 +43,9 @@ func (db *Database) DeleteRepoFromNamespace(namespace string, repo int) error {
 }
 
 type Repo struct {
-	Repo string
-	Ssh  string
-	Id   int
+	Repo string `json:"repo"`
+	Ssh  string `json:"ssh"`
+	Id   int    `json:"id"`
 }
 
 // Get namespace's repos
