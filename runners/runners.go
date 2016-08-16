@@ -195,6 +195,7 @@ func StartRun(uid, jobId int) error {
 	servReq := &message.ServerRequest{Kind: message.Run, JobId: jobId, Run: runReq}
 
 	go func() {
+		mysql.Db.LaunchRun(jobId, uid)
 		err := runner.encoder.Encode(servReq)
 
 		if err != nil {
@@ -205,7 +206,6 @@ func StartRun(uid, jobId int) error {
 			return
 		}
 
-		mysql.Db.LaunchRun(jobId, uid)
 		//mysql.Db.UpdateRunner(uid, "running")
 	}()
 
