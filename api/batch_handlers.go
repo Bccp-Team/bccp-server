@@ -66,8 +66,10 @@ func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 	type runInfo struct {
-		Id   int `json:"id"`
-		Repo int `json:"repo"`
+		Id     int    `json:"id"`
+		Repo   int    `json:"repo"`
+		Status string `json:"status"`
+		Batch  int    `json:"batch"`
 	}
 
 	type batchInfo struct {
@@ -111,7 +113,7 @@ func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 		runs_array := make([]runInfo, len(runs))
 
 		for i, r := range runs {
-			runs_array[i] = runInfo{r.Id, r.Repo}
+			runs_array[i] = runInfo{r.Id, r.Repo, r.Status, r.Batch}
 		}
 
 		res.Runs[kind] = runs_array
