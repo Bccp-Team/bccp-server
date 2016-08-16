@@ -289,7 +289,7 @@ func (client *clientInfo) logs(jobId int, logs []string) {
 	}
 
 	if run.Runner_id != client.uid {
-		log.Printf("WARNING: runner: runner update wrong run %v: %v", client.uid, jobId, err.Error())
+		log.Printf("WARNING: runner: runner update wrong run %v: %v", client.uid, jobId)
 		KillRunner(client.uid)
 		return
 	}
