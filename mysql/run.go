@@ -14,7 +14,7 @@ type Run struct {
 	Status    string `json:"status"`
 	Runner_id int    `json:"runner_id"`
 	Repo      int    `json:"repo"`
-	Batch     int    `json:"batch`
+	Batch     int    `json:"batch"`
 	Logs      string `json:"logs"`
 }
 
