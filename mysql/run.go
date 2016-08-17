@@ -10,37 +10,42 @@ import (
 )
 
 type Run struct {
-	Id        int    `json:"id"`
-	Status    string `json:"status"`
-	Runner_id int    `json:"runner_id"`
-	Repo      int    `json:"repo"`
-	Batch     int    `json:"batch"`
-	Logs      string `json:"logs"`
+	Id          int    `json:"id"`
+	Status      string `json:"status"`
+	Runner_id   int    `json:"runner_id"`
+	Runner_name string `json:"runner_name"`
+	Repo        int    `json:"repo"`
+	Repo_name   string `json:"repo_name"`
+	Batch       int    `json:"batch"`
+	Namespace   string `json:"namespace"`
+	Logs        string `json:"logs"`
 }
 
 // List Runs
 func (db *Database) ListRuns(filter map[string]string) ([]Run, error) {
-
 	var id int
 	var status string
 	var runner_id int
+	var runner_name sql.NullString
 	var repo int
+	var repo_name string
 	var batch int
+	var namespace string
 	var logs string
 
 	var rows *sql.Rows
 	var err error
 	// Execute the query
 	if len(filter) == 0 {
-		rows, err = db.conn.Query("SELECT * FROM run")
+		rows, err = db.conn.Query("SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id")
 	} else {
-		req := "SELECT * FROM run WHERE "
+		req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE "
 		f := make([]string, len(filter))
 		i := 0
 		l := make([]interface{}, len(filter))
 		for key, value := range filter {
 			//Here we trust that keys are legit
-			f[i] = key + "=?"
+			f[i] = "run." + key + "=?"
 			l[i] = value
 			i = i + 1
 		}
@@ -56,13 +61,17 @@ func (db *Database) ListRuns(filter map[string]string) ([]Run, error) {
 	// Fetch rows
 	for rows.Next() {
 		// get RawBytes from data
-		err = rows.Scan(&id, &status, &runner_id, &repo, &batch, &logs)
+		err = rows.Scan(&id, &status, &runner_id, &runner_name, &repo, &repo_name, &batch, &namespace, &logs)
 		if err != nil {
 			log.Print("ERROR: Unable to get next row: ", err.Error())
 			return nil, err
 		}
 
-		runs = append(runs, Run{id, status, runner_id, repo, batch, logs})
+		if !runner_name.Valid {
+			runs = append(runs, Run{id, status, runner_id, "", repo, repo_name, batch, namespace, logs})
+		} else {
+			runs = append(runs, Run{id, status, runner_id, runner_name.String, repo, repo_name, batch, namespace, logs})
+		}
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -74,22 +83,28 @@ func (db *Database) ListRuns(filter map[string]string) ([]Run, error) {
 
 // Get runner info by id
 func (db *Database) GetRun(run_id int) (*Run, error) {
-
 	var id int
 	var status string
 	var runner_id int
+	var runner_name sql.NullString
 	var repo int
+	var repo_name string
 	var batch int
+	var namespace string
 	var logs string
 	// Execute the query
-	req := "SELECT * FROM run WHERE run.id='" + strconv.Itoa(run_id) + "'"
-	err := db.conn.QueryRow(req).Scan(&id, &status, &runner_id, &repo, &batch, &logs)
+	req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE run.id='" + strconv.Itoa(run_id) + "'"
+	err := db.conn.QueryRow(req).Scan(&id, &status, &runner_id, &runner_name, &repo, &repo_name, &batch, &namespace, &logs)
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
 		return nil, err
 	}
 
-	return &Run{id, status, runner_id, repo, batch, logs}, nil
+	if !runner_name.Valid {
+		return &Run{id, status, runner_id, "", repo, repo_name, batch, namespace, logs}, nil
+	} else {
+		return &Run{id, status, runner_id, runner_name.String, repo, repo_name, batch, namespace, logs}, nil
+	}
 }
 
 // Launch run
