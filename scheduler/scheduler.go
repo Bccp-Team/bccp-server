@@ -28,6 +28,13 @@ func (sched *Scheduler) Start() {
 	sched.runRequests = make(chan int, 4096)
 	sched.waitingRunners = make(chan int, 4096)
 
+	runners_ := mysql.Db.ListRunners(map[string]string{"status": "waiting"})
+
+	for _, runner := range runners_ {
+		log.Printf("scheduler: add runner %v", runner.Id)
+		mysql.Db.UpdateRunner(runner.Id, "dead")
+	}
+
 	runs, err := mysql.Db.ListRuns(map[string]string{"status": "waiting"})
 
 	if err != nil {
