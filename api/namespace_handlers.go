@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/bccp-server/mysql"
 	"github.com/gorilla/mux"
@@ -101,7 +102,7 @@ func AddRepoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encoder.Encode(map[string]string{"ok": string(id)})
+	encoder.Encode(map[string]string{"ok": strconv.Itoa(id)})
 }
 
 // Delete given namespace

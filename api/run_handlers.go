@@ -90,7 +90,7 @@ func PutRunRepoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	scheduler.DefaultScheduler.AddRun(runId)
-	encoder.Encode(map[string]string{"ok": string(runId)})
+	encoder.Encode(map[string]string{"ok": strconv.Itoa(runId)})
 }
 
 // Add run
