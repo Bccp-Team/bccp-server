@@ -43,9 +43,10 @@ func (db *Database) DeleteRepoFromNamespace(namespace string, repo int) error {
 }
 
 type Repo struct {
-	Repo string `json:"repo"`
-	Ssh  string `json:"ssh"`
-	Id   int    `json:"id"`
+	Repo      string `json:"repo"`
+	Ssh       string `json:"ssh"`
+	Id        int    `json:"id"`
+	Namespace string `json:"namespace"`
 }
 
 // Get namespace's repos
@@ -54,16 +55,17 @@ func (db *Database) GetNamespaceRepos(name *string) ([]Repo, error) {
 	var repo string
 	var ssh string
 	var id int
+	var namespace string
 
 	var rows *sql.Rows
 	var err error
 
 	// Execute the query
 	if name == nil {
-		req := "SELECT id, repo, ssh FROM namespace_repos"
+		req := "SELECT id, repo, ssh, namespace FROM namespace_repos"
 		rows, err = db.conn.Query(req)
 	} else {
-		req := "SELECT id, repo, ssh FROM namespace_repos where namespace=?"
+		req := "SELECT id, repo, ssh, namespace FROM namespace_repos where namespace=?"
 		rows, err = db.conn.Query(req, *name)
 	}
 	if err != nil {
@@ -76,13 +78,13 @@ func (db *Database) GetNamespaceRepos(name *string) ([]Repo, error) {
 	// Fetch rows
 	for rows.Next() {
 		// get RawBytes from data
-		err = rows.Scan(&id, &repo, &ssh)
+		err = rows.Scan(&id, &repo, &ssh, &namespace)
 		if err != nil {
 			log.Print("ERROR: Unable to get next row: ", err.Error())
 			return nil, err
 		}
 
-		repos = append(repos, Repo{Id: id, Repo: repo, Ssh: ssh})
+		repos = append(repos, Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace})
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -96,15 +98,16 @@ func (db *Database) GetRepo(id int) (*Repo, error) {
 
 	var repo string
 	var ssh string
+	var namespace string
 	// Execute the query
-	req := "SELECT repo, ssh FROM namespace_repos where id=?"
-	err := db.conn.QueryRow(req, id).Scan(&repo, &ssh)
+	req := "SELECT repo, ssh, namespace FROM namespace_repos where id=?"
+	err := db.conn.QueryRow(req, id).Scan(&repo, &ssh, &namespace)
 	if err != nil {
 		log.Print("ERROR: Unable to select namespace repos: ", err.Error())
 		return nil, err
 	}
 
-	return &Repo{Id: id, Repo: repo, Ssh: ssh}, nil
+	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace}, nil
 }
 
 func (db *Database) GetRepoFromName(name string, namespace string) (*Repo, error) {
@@ -119,5 +122,5 @@ func (db *Database) GetRepoFromName(name string, namespace string) (*Repo, error
 		return nil, err
 	}
 
-	return &Repo{Id: id, Repo: repo, Ssh: ssh}, nil
+	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace}, nil
 }
