@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -190,7 +191,7 @@ func StartRun(uid, jobId int) error {
 	}
 
 	runReq := &message.RunRequest{Init: batch.Init_script, Repo: repo.Ssh,
-		Name: repo.Repo, UpdateTime: uint(batch.Update_time),
+		Name: repo.Repo + "_" + strconv.Itoa(jobId), UpdateTime: uint(batch.Update_time),
 		Timeout: uint(batch.Timeout)}
 	servReq := &message.ServerRequest{Kind: message.Run, JobId: jobId, Run: runReq}
 
