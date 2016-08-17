@@ -65,21 +65,13 @@ func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
-	type runInfo struct {
-		Id     int    `json:"id"`
-		Repo   int    `json:"repo"`
-		Status string `json:"status"`
-		Batch  int    `json:"batch"`
-		Runner int    `json:"runner_id"`
-	}
-
 	type batchInfo struct {
-		Id          int                    `json:"id"`
-		Namespace   string                 `json:"namespace"`
-		Init_script string                 `json:"init_script"`
-		Update_time int                    `json:"update_time"`
-		Timeout     int                    `json:"timeout"`
-		Runs        map[string]([]runInfo) `json:"runs"`
+		Id          int                      `json:"id"`
+		Namespace   string                   `json:"namespace"`
+		Init_script string                   `json:"init_script"`
+		Update_time int                      `json:"update_time"`
+		Timeout     int                      `json:"timeout"`
+		Runs        map[string]([]mysql.Run) `json:"runs"`
 	}
 
 	vars := mux.Vars(r)
@@ -100,7 +92,7 @@ func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := &batchInfo{batch.Id, batch.Namespace, batch.Init_script,
-		batch.Update_time, batch.Timeout, make(map[string]([]runInfo))}
+		batch.Update_time, batch.Timeout, make(map[string]([]mysql.Run))}
 
 	for _, kind := range []string{"waiting", "running", "canceled",
 		"finished", "failed", "timeout"} {
@@ -111,13 +103,7 @@ func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		runs_array := make([]runInfo, len(runs))
-
-		for i, r := range runs {
-			runs_array[i] = runInfo{r.Id, r.Repo, r.Status, r.Batch, r.Runner_id}
-		}
-
-		res.Runs[kind] = runs_array
+		res.Runs[kind] = runs
 	}
 	encoder.Encode(res)
 }
