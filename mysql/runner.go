@@ -105,7 +105,7 @@ func (db *Database) AddRunner(ip string, name string) (int, error) {
 	}
 	defer insert.Close()
 
-	res, err := insert.Exec(name, name)
+	res, err := insert.Exec(ip, name)
 	if err != nil {
 		log.Print("ERROR: Unable to insert runner: ", err.Error())
 		return -1, err
