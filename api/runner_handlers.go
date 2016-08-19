@@ -15,7 +15,7 @@ func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
 		Status string `json:"status"`
 		Name   string `json:"name"`
-		Limite int    `json:limite`
+		Limit  int    `json:limit`
 		Offset int    `json:offset`
 	}
 
@@ -38,7 +38,7 @@ func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 		filter["name"] = req.Name
 	}
 
-	runners := mysql.Db.ListRunners(filter, req.Limite, req.Offset)
+	runners := mysql.Db.ListRunners(filter, req.Limit, req.Offset)
 	encoder.Encode(runners)
 }
 
