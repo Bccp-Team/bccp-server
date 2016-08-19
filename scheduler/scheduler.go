@@ -28,7 +28,7 @@ func (sched *Scheduler) Start() {
 	sched.runRequests = make(chan int, 4096)
 	sched.waitingRunners = make(chan int, 4096)
 
-	runners_ := mysql.Db.ListRunners(map[string]string{"status": "waiting"})
+	runners_ := mysql.Db.ListRunners(map[string]string{"status": "waiting"}, 0, 0)
 
 	for _, runner := range runners_ {
 		log.Printf("scheduler: add runner %v", runner.Id)

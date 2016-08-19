@@ -18,13 +18,25 @@ type Runner struct {
 	Ip              string    `json:"ip"`
 }
 
-func (db *Database) ListRunners(filter map[string]string) []Runner {
+func (db *Database) ListRunners(filter map[string]string, limit, offset int) []Runner {
 	var rows *sql.Rows
 	var err error
 
+	var limit_req string
+
+	if limit > 0 {
+		limit_req += " LIMIT " + strconv.Itoa(limit)
+	}
+
+	if offset > 0 {
+		limit_req += " OFFSET " + strconv.Itoa(offset)
+	}
+
+	limit_req += " ORDER BY last_conn DESC"
+
 	// Execute the query
 	if len(filter) == 0 {
-		rows, err = db.conn.Query("SELECT * FROM runner")
+		rows, err = db.conn.Query("SELECT * FROM runner" + limit_req)
 	} else {
 		req := "SELECT * FROM runner WHERE "
 		f := make([]string, len(filter))
@@ -36,7 +48,7 @@ func (db *Database) ListRunners(filter map[string]string) []Runner {
 			l[i] = value
 			i = i + 1
 		}
-		rows, err = db.conn.Query(req+strings.Join(f, " AND "), l...)
+		rows, err = db.conn.Query(req+strings.Join(f, " AND ")+limit_req, l...)
 	}
 
 	if err != nil {
