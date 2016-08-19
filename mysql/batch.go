@@ -22,7 +22,7 @@ func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 	var rows *sql.Rows
 	var err error
 
-	var limit_req string
+	limit_req := " ORDER BY creation DESC"
 
 	if limit > 0 {
 		limit_req += " LIMIT " + strconv.Itoa(limit)
@@ -31,8 +31,6 @@ func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 	if offset > 0 {
 		limit_req += " OFFSET " + strconv.Itoa(offset)
 	}
-
-	limit_req += " ORDER BY creation DESC"
 
 	if namespace == nil {
 		rows, err = db.conn.Query("SELECT * FROM batch" + limit_req)
@@ -73,7 +71,7 @@ func (db *Database) ListActiveBatchs(namespace *string, limit, offset int) []Bat
 	var rows *sql.Rows
 	var err error
 
-	var limit_req string
+	limit_req := " ORDER BY creation DESC"
 
 	if limit > 0 {
 		limit_req += " LIMIT " + strconv.Itoa(limit)
@@ -82,8 +80,6 @@ func (db *Database) ListActiveBatchs(namespace *string, limit, offset int) []Bat
 	if offset > 0 {
 		limit_req += " OFFSET " + strconv.Itoa(offset)
 	}
-
-	limit_req += " ORDER BY creation DESC"
 
 	if namespace == nil {
 		rows, err = db.conn.Query("SELECT * FROM batch WHERE EXISTS(SELECT * FROM run WHERE run.batch = batch.id AND run.status IN ('waiting', 'running'))" + limit_req)

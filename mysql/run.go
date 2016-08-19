@@ -41,7 +41,7 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int) ([]Run
 	var rows *sql.Rows
 	var err error
 
-	var limit_req string
+	limit_req := " ORDER BY run.last_update DESC"
 
 	if limit > 0 {
 		limit_req += " LIMIT " + strconv.Itoa(limit)
@@ -51,7 +51,6 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int) ([]Run
 		limit_req += " OFFSET " + strconv.Itoa(offset)
 	}
 
-	limit_req += " ORDER BY run.last_update DESC"
 	// Execute the query
 	if len(filter) == 0 {
 		rows, err = db.conn.Query("SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs, run.creation, run.last_update FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id" + limit_req)

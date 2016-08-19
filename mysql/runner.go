@@ -22,7 +22,7 @@ func (db *Database) ListRunners(filter map[string]string, limit, offset int) []R
 	var rows *sql.Rows
 	var err error
 
-	var limit_req string
+	limit_req := " ORDER BY last_conn DESC"
 
 	if limit > 0 {
 		limit_req += " LIMIT " + strconv.Itoa(limit)
@@ -31,8 +31,6 @@ func (db *Database) ListRunners(filter map[string]string, limit, offset int) []R
 	if offset > 0 {
 		limit_req += " OFFSET " + strconv.Itoa(offset)
 	}
-
-	limit_req += " ORDER BY last_conn DESC"
 
 	// Execute the query
 	if len(filter) == 0 {
