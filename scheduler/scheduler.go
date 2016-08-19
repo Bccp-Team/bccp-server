@@ -35,7 +35,7 @@ func (sched *Scheduler) Start() {
 		mysql.Db.UpdateRunner(runner.Id, "dead")
 	}
 
-	runs, err := mysql.Db.ListRuns(map[string]string{"status": "waiting"})
+	runs, err := mysql.Db.ListRuns(map[string]string{"status": "waiting"}, 0, 0)
 
 	if err != nil {
 		//FIXME

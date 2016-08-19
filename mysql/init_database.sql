@@ -48,16 +48,18 @@ create table batch
 
 create table run
 (
-	id	serial		not null,
-	status	varchar(16)	not null default 'waiting'
-				check (status in ('waiting', 'running',
-				'canceled', 'finished', 'failed', 'timeout')),
-	runner	bigint unsigned not null,
-	repo    bigint unsigned not null,
-	batch	bigint unsigned	not null,
-	logs	text		not null,
+	id	    serial	    not null,
+	status	    varchar(16)	    not null default 'waiting'
+                                    check (status in ('waiting', 'running'
+                                    'canceled', 'finished', 'failed', 'timeout')),
+	runner	    bigint unsigned not null,
+	repo        bigint unsigned not null,
+	batch	    bigint unsigned not null,
+	logs	    text	    not null,
+	creation    timestamp	    default current_timestamp,
+	last_update timestamp	    default current_timestamp
+                                    on update current_timestamp,
 	primary key (id),
 	foreign key(repo) references namespace_repos(id),
 	foreign key(batch) references batch(id)
---	foreign key(runner) references runner(id)
 );

@@ -17,6 +17,8 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 		Status string `json:"status"`
 		Runner string `json:"runner"`
 		Repo   string `json:"repo"`
+		Limite int    `json:limite`
+		Offset int    `json:offset`
 	}
 
 	var req request
@@ -43,7 +45,7 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 		filter["repo"] = req.Repo
 	}
 
-	runs, err := mysql.Db.ListRuns(filter)
+	runs, err := mysql.Db.ListRuns(filter, req.Limite, req.Offset)
 
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
