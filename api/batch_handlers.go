@@ -64,7 +64,7 @@ func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 		namespace = &req.Namespace
 	}
 
-	batchs := mysql.Db.ListBatchs(namespace, req.Limit, req.Offset)
+	batchs := mysql.Db.ListActiveBatchs(namespace, req.Limit, req.Offset)
 	encoder.Encode(batchs)
 }
 
