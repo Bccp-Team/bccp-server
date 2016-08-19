@@ -4,7 +4,6 @@ drop table if exists run cascade;
 drop table if exists namespace cascade;
 drop table if exists namespace_repos cascade;
 drop table if exists batch cascade;
-drop table if exists batch_runs cascade;
 set foreign_key_checks = 1;
 
 create table runner
@@ -42,6 +41,7 @@ create table batch
 	init_script	text		not null,
 	update_time	int		not null,
 	timeout		int		not null,
+	creation    timestamp	    default current_timestamp,
 	primary key (id),
 	foreign key(namespace) references namespace(name)
 );

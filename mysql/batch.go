@@ -4,26 +4,40 @@ import (
 	"database/sql"
 	"log"
 	"strconv"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type Batch struct {
-	Id          int    `json:"id"`
-	Namespace   string `json:"namespace"`
-	Init_script string `json:"init_script"`
-	Update_time int    `json:"update_time"`
-	Timeout     int    `json:"timeout"`
+	Id          int       `json:"id"`
+	Namespace   string    `json:"namespace"`
+	Init_script string    `json:"init_script"`
+	Update_time int       `json:"update_time"`
+	Timeout     int       `json:"timeout"`
+	Creation    time.Time `json."time"`
 }
 
-func (db *Database) ListBatchs(namespace *string) []Batch {
+func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 	var rows *sql.Rows
 	var err error
 
+	var limit_req string
+
+	if limit > 0 {
+		limit_req += " LIMIT " + strconv.Itoa(limit)
+	}
+
+	if offset > 0 {
+		limit_req += " OFFSET " + strconv.Itoa(offset)
+	}
+
+	limit_req += " ORDER BY creation DESC"
+
 	if namespace == nil {
-		rows, err = db.conn.Query("SELECT * FROM batch")
+		rows, err = db.conn.Query("SELECT * FROM batch" + limit_req)
 	} else {
-		rows, err = db.conn.Query("SELECT * FROM batch where namespace=?", namespace)
+		rows, err = db.conn.Query("SELECT * FROM batch where namespace=?"+limit_req, namespace)
 	}
 	// Execute the query
 	if err != nil {
@@ -39,13 +53,14 @@ func (db *Database) ListBatchs(namespace *string) []Batch {
 		var init_script string
 		var update_time int
 		var timeout int
+		var creation time.Time
 		// get RawBytes from data
-		err = rows.Scan(&id, &namespace, &init_script, &update_time, &timeout)
+		err = rows.Scan(&id, &namespace, &init_script, &update_time, &timeout, &creation)
 		if err != nil {
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		batchs = append(batchs, Batch{id, namespace, init_script, update_time, timeout})
+		batchs = append(batchs, Batch{id, namespace, init_script, update_time, timeout, creation})
 	}
 	if err = rows.Err(); err != nil {
 		log.Fatal("ERROR: Undefined row err: ", err.Error())
@@ -54,14 +69,26 @@ func (db *Database) ListBatchs(namespace *string) []Batch {
 	return batchs
 }
 
-func (db *Database) ListActiveBatchs(namespace *string) []Batch {
+func (db *Database) ListActiveBatchs(namespace *string, limit, offset int) []Batch {
 	var rows *sql.Rows
 	var err error
 
+	var limit_req string
+
+	if limit > 0 {
+		limit_req += " LIMIT " + strconv.Itoa(limit)
+	}
+
+	if offset > 0 {
+		limit_req += " OFFSET " + strconv.Itoa(offset)
+	}
+
+	limit_req += " ORDER BY creation DESC"
+
 	if namespace == nil {
-		rows, err = db.conn.Query("SELECT * FROM batch WHERE EXISTS(SELECT * FROM run WHERE run.batch = batch.id AND run.status IN ('waiting', 'running'))")
+		rows, err = db.conn.Query("SELECT * FROM batch WHERE EXISTS(SELECT * FROM run WHERE run.batch = batch.id AND run.status IN ('waiting', 'running'))" + limit_req)
 	} else {
-		rows, err = db.conn.Query("SELECT * FROM batch WHERE namespace=? AND EXISTS(SELECT * FROM run WHERE run.batch = batch.id AND run.status IN ('waiting', 'running'))", namespace)
+		rows, err = db.conn.Query("SELECT * FROM batch WHERE namespace=? AND EXISTS(SELECT * FROM run WHERE run.batch = batch.id AND run.status IN ('waiting', 'running'))"+limit_req, namespace)
 	}
 	// Execute the query
 	if err != nil {
@@ -77,13 +104,14 @@ func (db *Database) ListActiveBatchs(namespace *string) []Batch {
 		var init_script string
 		var update_time int
 		var timeout int
+		var creation time.Time
 		// get RawBytes from data
-		err = rows.Scan(&id, &namespace, &init_script, &update_time, &timeout)
+		err = rows.Scan(&id, &namespace, &init_script, &update_time, &timeout, &creation)
 		if err != nil {
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		batchs = append(batchs, Batch{id, namespace, init_script, update_time, timeout})
+		batchs = append(batchs, Batch{id, namespace, init_script, update_time, timeout, creation})
 	}
 	if err = rows.Err(); err != nil {
 		log.Fatal("ERROR: Undefined row err: ", err.Error())
@@ -99,15 +127,16 @@ func (db *Database) GetBatch(id int) (*Batch, error) {
 	var init_script string
 	var update_time int
 	var timeout int
+	var creation time.Time
 	// Execute the query
 	req := "SELECT * FROM batch WHERE batch.id='" + strconv.Itoa(id) + "'"
-	err := db.conn.QueryRow(req).Scan(&b_id, &namespace, &init_script, &update_time, &timeout)
+	err := db.conn.QueryRow(req).Scan(&b_id, &namespace, &init_script, &update_time, &timeout, &creation)
 	if err != nil {
 		log.Print("ERROR: Unable to select batch: ", err.Error())
 		return nil, err
 	}
 
-	return &Batch{id, namespace, init_script, update_time, timeout}, nil
+	return &Batch{id, namespace, init_script, update_time, timeout, creation}, nil
 }
 
 func (db *Database) GetLastBatchFromNamespace(n string) (*Batch, error) {
@@ -117,21 +146,23 @@ func (db *Database) GetLastBatchFromNamespace(n string) (*Batch, error) {
 	var init_script string
 	var update_time int
 	var timeout int
+	var creation time.Time
+
 	// Execute the query
-	req := "SELECT * FROM batch WHERE batch.namespace=? ORDER BY id DESC"
-	err := db.conn.QueryRow(req, n).Scan(&b_id, &namespace, &init_script, &update_time, &timeout)
+	req := "SELECT * FROM batch WHERE batch.namespace=? ORDER BY creation DESC"
+	err := db.conn.QueryRow(req, n).Scan(&b_id, &namespace, &init_script, &update_time, &timeout, &creation)
 	if err != nil {
 		log.Print("ERROR: Unable to select batch: ", err.Error())
 		return nil, err
 	}
 
-	return &Batch{b_id, namespace, init_script, update_time, timeout}, nil
+	return &Batch{b_id, namespace, init_script, update_time, timeout, creation}, nil
 }
 
 func (db *Database) AddBatch(namespace string, init_script string, update_time int, timeout int) (int, error) {
 
 	// Prepare statement for inserting data
-	req := "INSERT INTO batch VALUES(NULL,?,?,?,?)"
+	req := "INSERT INTO batch VALUES(NULL,?,?,?,?,NULL)"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add batch: ", err.Error())

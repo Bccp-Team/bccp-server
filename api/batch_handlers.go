@@ -13,6 +13,8 @@ import (
 func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
 		Namespace string `json:"namespace"`
+		Limit     int    `json:"limit"`
+		Offset    int    `json:"offset"`
 	}
 
 	var req request
@@ -33,13 +35,15 @@ func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 		namespace = &req.Namespace
 	}
 
-	batchs := mysql.Db.ListBatchs(namespace)
+	batchs := mysql.Db.ListBatchs(namespace, req.Limit, req.Offset)
 	encoder.Encode(batchs)
 }
 
 func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
 		Namespace string `json:"namespace"`
+		Limit     int    `json:"limit"`
+		Offset    int    `json:"offset"`
 	}
 
 	var req request
@@ -60,7 +64,7 @@ func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 		namespace = &req.Namespace
 	}
 
-	batchs := mysql.Db.ListActiveBatchs(namespace)
+	batchs := mysql.Db.ListBatchs(namespace, req.Limit, req.Offset)
 	encoder.Encode(batchs)
 }
 
