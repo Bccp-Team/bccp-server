@@ -207,3 +207,81 @@ func (db *Database) UpdateRunLogs(run_id int, new_logs string) error {
 
 	return nil
 }
+func (db *Database) StatRun(filter map[string]string) (stats map[string]int64, err error) {
+	var total int64
+	var waiting, running, canceled, finished, failed, timeout sql.NullInt64
+
+	stats = make(map[string]int64)
+
+	req := `SELECT COUNT(*) total,
+		SUM(CASE WHEN status = 'waiting' then 1 else 0 end) waiting,
+		SUM(CASE WHEN status = 'running' then 1 else 0 end) running,
+		SUM(CASE WHEN status = 'canceled' then 1 else 0 end) canceled,
+		SUM(CASE WHEN status = 'finished' then 1 else 0 end) finished,
+		SUM(CASE WHEN status = 'failed' then 1 else 0 end) failed,
+		SUM(CASE WHEN status = 'timeout' then 1 else 0 end) timeout
+		FROM run`
+
+	if len(filter) == 0 {
+		err = db.conn.QueryRow(req).Scan(&total, &waiting, &running, &canceled, &finished, &failed, &timeout)
+	} else {
+		req += " WHERE "
+		f := make([]string, len(filter))
+		i := 0
+		l := make([]interface{}, len(filter))
+		for key, value := range filter {
+			//Here we trust that keys are legit
+			f[i] = "run." + key + "=?"
+			l[i] = value
+			i = i + 1
+		}
+		err = db.conn.QueryRow(req+strings.Join(f, " AND "), l...).Scan(&total, &waiting, &running, &canceled, &finished, &failed, &timeout)
+	}
+
+	if err != nil {
+		log.Print("ERROR: Unable to select run: ", err.Error())
+		return
+	}
+
+	//FIXME refactor
+
+	stats["all"] = total
+
+	if waiting.Valid {
+		stats["waiting"] = waiting.Int64
+	} else {
+		stats["waiting"] = 0
+	}
+
+	if running.Valid {
+		stats["running"] = running.Int64
+	} else {
+		stats["running"] = 0
+	}
+
+	if canceled.Valid {
+		stats["canceled"] = canceled.Int64
+	} else {
+		stats["canceled"] = 0
+	}
+
+	if finished.Valid {
+		stats["finished"] = finished.Int64
+	} else {
+		stats["finished"] = 0
+	}
+
+	if failed.Valid {
+		stats["failed"] = failed.Int64
+	} else {
+		stats["failed"] = 0
+	}
+
+	if timeout.Valid {
+		stats["timeout"] = timeout.Int64
+	} else {
+		stats["timeout"] = 0
+	}
+
+	return
+}

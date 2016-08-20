@@ -17,8 +17,9 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 		Status string `json:"status"`
 		Runner string `json:"runner"`
 		Repo   string `json:"repo"`
-		Limit  int    `json:limit`
-		Offset int    `json:offset`
+		Batch  string `json:"batch"`
+		Limit  int    `json:"limit"`
+		Offset int    `json:"offset"`
 	}
 
 	var req request
@@ -44,6 +45,9 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	if len(req.Repo) > 0 {
 		filter["repo"] = req.Repo
 	}
+	if len(req.Batch) > 0 {
+		filter["batch"] = req.Batch
+	}
 
 	runs, err := mysql.Db.ListRuns(filter, req.Limit, req.Offset)
 
@@ -53,6 +57,51 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	encoder.Encode(runs)
+}
+
+func GetRunStatHandler(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		Status string `json:"status"`
+		Runner string `json:"runner"`
+		Repo   string `json:"repo"`
+		Batch  string `json:"batch"`
+	}
+
+	var req request
+
+	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
+
+	err := decoder.Decode(&req)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	filter := make(map[string]string)
+
+	if len(req.Status) > 0 {
+		filter["status"] = req.Status
+	}
+	if len(req.Runner) > 0 {
+		filter["runner"] = req.Runner
+	}
+	if len(req.Repo) > 0 {
+		filter["repo"] = req.Repo
+	}
+	if len(req.Batch) > 0 {
+		filter["batch"] = req.Batch
+	}
+
+	stats, err := mysql.Db.StatRun(filter)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	encoder.Encode(stats)
 }
 
 // Get information about given run

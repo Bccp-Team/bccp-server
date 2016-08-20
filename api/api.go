@@ -27,6 +27,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crt_file string, key_file s
 	pst_api.HandleFunc("/runner/{id:[0-9]+}/disable", PostDisableRunnerHandler)
 
 	get_api.HandleFunc("/run", GetRunHandler)
+	get_api.HandleFunc("/run/stats", GetRunStatHandler)
 	get_api.HandleFunc("/run/{id:[0-9]+}", GetRunByIdHandler)
 	put_api.HandleFunc("/run/{batch_id:[0-9]+}/{repo_id:[0-9]+}", PutRunRepoHandler)
 	put_api.HandleFunc("/run", PutRunHandler)
