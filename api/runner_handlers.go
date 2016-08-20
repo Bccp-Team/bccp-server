@@ -42,6 +42,12 @@ func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	encoder.Encode(runners)
 }
 
+func GetRunnerStatHandler(w http.ResponseWriter, r *http.Request) {
+	encoder := json.NewEncoder(w)
+	total, waiting, dead, _ := mysql.Db.StatRunners()
+	encoder.Encode(map[string]int64{"total": total, "waiting": waiting, "dead": dead})
+}
+
 // Get information about given runner
 func GetRunnerByIdHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

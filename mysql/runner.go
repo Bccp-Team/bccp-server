@@ -148,3 +148,29 @@ func (db *Database) UpdateRunner(id int, state string) error {
 
 	return nil
 }
+
+func (db *Database) StatRunners() (total, waiting, dead int64, err error) {
+	// Execute the query
+
+	var waitingNull sql.NullInt64
+	var deadNull sql.NullInt64
+
+	req := "SELECT COUNT(*) total, SUM(CASE WHEN status = 'waiting' then 1 else 0 end) waiting, SUM(CASE WHEN status = 'dead' then 1 else 0 end) dead FROM runner"
+
+	err = db.conn.QueryRow(req).Scan(&total, &waitingNull, &deadNull)
+
+	if err != nil {
+		log.Print("ERROR: Unable to select run: ", err.Error())
+		return
+	}
+
+	if waitingNull.Valid {
+		waiting = waitingNull.Int64
+	}
+
+	if deadNull.Valid {
+		dead = deadNull.Int64
+	}
+
+	return
+}
