@@ -138,3 +138,36 @@ func AddBatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	encoder.Encode(map[string]string{"ok": "created"})
 }
+
+func GetBatchStatHandler(w http.ResponseWriter, r *http.Request) {
+	type request struct {
+		Namespace string `json:"namespace"`
+	}
+
+	var req request
+
+	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
+
+	err := decoder.Decode(&req)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	var namespace *string = nil
+
+	if len(req.Namespace) > 0 {
+		namespace = &req.Namespace
+	}
+
+	stats, err := mysql.Db.StatBatch(namespace)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	encoder.Encode(stats)
+}

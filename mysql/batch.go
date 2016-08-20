@@ -175,3 +175,41 @@ func (db *Database) AddBatch(namespace string, init_script string, update_time i
 	id, _ := res.LastInsertId()
 	return int(id), nil
 }
+
+func (db *Database) StatBatch(namespace *string) (stats map[string]int64, err error) {
+
+	stats = make(map[string]int64)
+	var total int64
+	var active sql.NullInt64
+
+	req := `SELECT COUNT(*) total,
+		SUM(CASE WHEN EXISTS(SELECT * FROM run
+					WHERE run.batch = batch.id
+					AND run.status IN ('waiting', 'running'))
+			THEN 1
+			ELSE 0
+		    END) active
+		FROM batch`
+
+	if namespace == nil {
+		err = db.conn.QueryRow(req).Scan(&total, &active)
+	} else {
+		req += "WHERE namespace=?"
+		err = db.conn.QueryRow(req, *namespace).Scan(&total, &active)
+	}
+
+	if err != nil {
+		log.Print("ERROR: Unable to stat batch: ", err.Error())
+		return
+	}
+
+	stats["all"] = total
+
+	if active.Valid {
+		stats["active"] = active.Int64
+	} else {
+		stats["active"] = 0
+	}
+
+	return
+}
