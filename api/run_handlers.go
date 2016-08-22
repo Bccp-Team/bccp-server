@@ -28,7 +28,6 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 
 	err := decoder.Decode(&req)
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -50,7 +49,6 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	runs, err := mysql.Db.ListRuns(filter, req.Limit, req.Offset)
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -73,7 +71,6 @@ func GetRunStatHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 
 	err := decoder.Decode(&req)
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -95,7 +92,6 @@ func GetRunStatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stats, err := mysql.Db.StatRun(filter)
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -105,19 +101,17 @@ func GetRunStatHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get information about given run
-func GetRunByIdHandler(w http.ResponseWriter, r *http.Request) {
+func GetRunByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	run, err := mysql.Db.GetRun(int(id))
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -130,22 +124,20 @@ func PutRunRepoHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encoder := json.NewEncoder(w)
 
-	batch_id, _ := strconv.Atoi(vars["batch_id"])
-	repo_id, _ := strconv.Atoi(vars["repo_id"])
+	batchID, _ := strconv.Atoi(vars["batch_id"])
+	repoID, _ := strconv.Atoi(vars["repo_id"])
 
-	runId, err := mysql.Db.AddRun(repo_id, batch_id)
-
+	runID, err := mysql.Db.AddRun(repoID, batchID)
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	scheduler.DefaultScheduler.AddRun(runId)
-	encoder.Encode(map[string]string{"ok": strconv.Itoa(runId)})
+	scheduler.DefaultScheduler.AddRun(runID)
+	encoder.Encode(map[string]string{"ok": strconv.Itoa(runID)})
 }
 
 // Add run
-
 func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	type runRequest struct {
 		Namespace  string `json:"namespace"`
@@ -155,7 +147,7 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type runResult struct {
-		Id   int            `json:"id"`
+		ID   int            `json:"id"`
 		Runs map[int]string `json:"runs"`
 	}
 
@@ -164,8 +156,8 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
-	err := decoder.Decode(&runReq)
 
+	err := decoder.Decode(&runReq)
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -176,18 +168,14 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	batch_id, err := mysql.Db.AddBatch(runReq.Namespace, runReq.InitScript,
-		runReq.UpdateTime, runReq.Timeout)
-
-	runRes.Id = batch_id
-
+	batchID, err := mysql.Db.AddBatch(runReq.Namespace, runReq.InitScript, runReq.UpdateTime, runReq.Timeout)
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
+	runRes.ID = batchID
 	repos, err := mysql.Db.GetNamespaceRepos(&runReq.Namespace)
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -196,14 +184,14 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	runRes.Runs = make(map[int]string)
 
 	for _, repo := range repos {
-		runId, err := mysql.Db.AddRun(repo.Id, batch_id)
+		runID, err := mysql.Db.AddRun(repo.ID, batchID)
 		if err != nil {
 			encoder.Encode(map[string]string{"error": err.Error()})
 			return
 		}
 
-		scheduler.DefaultScheduler.AddRun(runId)
-		runRes.Runs[runId] = repo.Repo
+		scheduler.DefaultScheduler.AddRun(runID)
+		runRes.Runs[runID] = repo.Repo
 	}
 
 	encoder.Encode(runRes)
@@ -215,23 +203,26 @@ func DeleteRunHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	run, err := mysql.Db.GetRun(int(id))
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	if run.Runner_id != 0 {
-		runners.KillRun(run.Runner_id, id)
+	if run.RunnerID != 0 {
+		runners.KillRun(run.RunnerID, id)
 	}
 
 	err = mysql.Db.UpdateRunStatus(id, "canceled")
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
 	encoder.Encode(map[string]string{"ok": "canceled"})
 }

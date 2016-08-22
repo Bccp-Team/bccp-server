@@ -3,8 +3,6 @@ package mysql
 import (
 	"database/sql"
 	"log"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 func (db *Database) AddRepoToNamespace(namespace string, repo string, ssh string) (int, error) {
@@ -44,14 +42,13 @@ func (db *Database) DeleteRepoFromNamespace(namespace string, repo int) error {
 
 type Repo struct {
 	Repo      string `json:"repo"`
-	Ssh       string `json:"ssh"`
-	Id        int    `json:"id"`
+	SSH       string `json:"ssh"`
+	ID        int    `json:"id"`
 	Namespace string `json:"namespace"`
 }
 
 // Get namespace's repos
 func (db *Database) GetNamespaceRepos(name *string) ([]Repo, error) {
-
 	var repo string
 	var ssh string
 	var id int
@@ -84,7 +81,7 @@ func (db *Database) GetNamespaceRepos(name *string) ([]Repo, error) {
 			return nil, err
 		}
 
-		repos = append(repos, Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace})
+		repos = append(repos, Repo{ID: id, Repo: repo, SSH: ssh, Namespace: namespace})
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -95,10 +92,10 @@ func (db *Database) GetNamespaceRepos(name *string) ([]Repo, error) {
 }
 
 func (db *Database) GetRepo(id int) (*Repo, error) {
-
 	var repo string
 	var ssh string
 	var namespace string
+
 	// Execute the query
 	req := "SELECT repo, ssh, namespace FROM namespace_repos where id=?"
 	err := db.conn.QueryRow(req, id).Scan(&repo, &ssh, &namespace)
@@ -107,13 +104,14 @@ func (db *Database) GetRepo(id int) (*Repo, error) {
 		return nil, err
 	}
 
-	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace}, nil
+	return &Repo{ID: id, Repo: repo, SSH: ssh, Namespace: namespace}, nil
 }
 
 func (db *Database) GetRepoFromName(name string, namespace string) (*Repo, error) {
 	var id int
 	var repo string
 	var ssh string
+
 	// Execute the query
 	req := "SELECT id, repo, ssh FROM namespace_repos where repo=? AND namespace=?"
 	err := db.conn.QueryRow(req, name, namespace).Scan(&id, &repo, &ssh)
@@ -122,5 +120,5 @@ func (db *Database) GetRepoFromName(name string, namespace string) (*Repo, error
 		return nil, err
 	}
 
-	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace}, nil
+	return &Repo{ID: id, Repo: repo, SSH: ssh, Namespace: namespace}, nil
 }

@@ -6,26 +6,24 @@ import (
 	"os"
 	"sync"
 
-	"github.com/BurntSushi/toml"
 	"github.com/Bccp-Team/bccp-server/api"
 	"github.com/Bccp-Team/bccp-server/mysql"
 	"github.com/Bccp-Team/bccp-server/runners"
 	"github.com/Bccp-Team/bccp-server/scheduler"
+	"github.com/BurntSushi/toml"
 )
 
-// Info from config file
 type Config struct {
-	Api_port       string
-	Runner_service string
-	Runner_token   string
-	Key_file       string
-	Crt_file       string
-	Mysql_database string
-	Mysql_user     string
-	Mysql_password string
+	APIPort       string
+	RunnerService string
+	RunnerToken   string
+	KeyFile       string
+	CrtFile       string
+	MysqlDatabase string
+	MysqlUser     string
+	MysqlPassword string
 }
 
-// Reads info from config file
 func ReadConfig(configfile string) Config {
 	_, err := os.Stat(configfile)
 	if err != nil {
@@ -36,6 +34,7 @@ func ReadConfig(configfile string) Config {
 	if _, err := toml.DecodeFile(configfile, &config); err != nil {
 		log.Fatal(err)
 	}
+
 	return config
 }
 
@@ -47,13 +46,15 @@ func main() {
 
 	var config = ReadConfig(configPath)
 	var wait sync.WaitGroup
-	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
+	mysql.Db.Connect(config.MysqlDatabase, config.MysqlUser, config.MysqlPassword)
+
 	go scheduler.DefaultScheduler.Start()
-	go runners.WaitRunners(&scheduler.DefaultScheduler, config.Runner_service, config.Runner_token)
-	api.SetupRestAPI(&wait, config.Api_port, config.Crt_file, config.Key_file)
+	go runners.WaitRunners(&scheduler.DefaultScheduler, config.RunnerService, config.RunnerToken)
+
+	api.SetupRestAPI(&wait, config.APIPort, config.CrtFile, config.KeyFile)
 
 	// Mysql tests
-	mysql.Db.Connect(config.Mysql_database, config.Mysql_user, config.Mysql_password)
+	mysql.Db.Connect(config.MysqlDatabase, config.MysqlUser, config.MysqlPassword)
 
 	wait.Wait()
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 
+	// Mysql driver blank import
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -16,7 +17,6 @@ type Database struct {
 }
 
 func (db *Database) Connect(database string, user string, password string) {
-
 	dsn := user + ":" + password + "@/" + database + "?parseTime=true"
 	conn, err := sql.Open("mysql", dsn)
 	if err != nil {

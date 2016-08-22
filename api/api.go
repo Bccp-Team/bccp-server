@@ -9,53 +9,53 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func SetupRestAPI(wait *sync.WaitGroup, port string, crt_file string, key_file string) {
+func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile string) {
 	r := mux.NewRouter()
 
 	// Define supported methods
-	get_api := r.Methods("GET").Subrouter()
-	pst_api := r.Methods("POST").Subrouter()
-	put_api := r.Methods("PUT").Subrouter()
-	del_api := r.Methods("DELETE").Subrouter()
+	getAPI := r.Methods("GET").Subrouter()
+	pstAPI := r.Methods("POST").Subrouter()
+	putAPI := r.Methods("PUT").Subrouter()
+	delAPI := r.Methods("DELETE").Subrouter()
 
 	// Define routes
-	get_api.HandleFunc("/runner", GetRunnerHandler)
-	get_api.HandleFunc("/runner/stats", GetRunnerStatHandler)
-	get_api.HandleFunc("/runner/{id:[0-9]+}", GetRunnerByIdHandler)
-	del_api.HandleFunc("/runner/{id:[0-9]+}", DeleteRunnerHandler)
-	pst_api.HandleFunc("/runner/{id:[0-9]+}/enable", PostEnableRunnerHandler)
-	pst_api.HandleFunc("/runner/{id:[0-9]+}/disable", PostDisableRunnerHandler)
+	getAPI.HandleFunc("/runner", GetRunnerHandler)
+	getAPI.HandleFunc("/runner/stats", GetRunnerStatHandler)
+	getAPI.HandleFunc("/runner/{id:[0-9]+}", GetRunnerByIDHandler)
+	delAPI.HandleFunc("/runner/{id:[0-9]+}", DeleteRunnerHandler)
+	pstAPI.HandleFunc("/runner/{id:[0-9]+}/enable", PostEnableRunnerHandler)
+	pstAPI.HandleFunc("/runner/{id:[0-9]+}/disable", PostDisableRunnerHandler)
 
-	get_api.HandleFunc("/run", GetRunHandler)
-	get_api.HandleFunc("/run/stats", GetRunStatHandler)
-	get_api.HandleFunc("/run/{id:[0-9]+}", GetRunByIdHandler)
-	put_api.HandleFunc("/run/{batch_id:[0-9]+}/{repo_id:[0-9]+}", PutRunRepoHandler)
-	put_api.HandleFunc("/run", PutRunHandler)
-	del_api.HandleFunc("/run/{id:[0-9]+}", DeleteRunHandler)
+	getAPI.HandleFunc("/run", GetRunHandler)
+	getAPI.HandleFunc("/run/stats", GetRunStatHandler)
+	getAPI.HandleFunc("/run/{id:[0-9]+}", GetRunByIDHandler)
+	putAPI.HandleFunc("/run/{batch_id:[0-9]+}/{repo_id:[0-9]+}", PutRunRepoHandler)
+	putAPI.HandleFunc("/run", PutRunHandler)
+	delAPI.HandleFunc("/run/{id:[0-9]+}", DeleteRunHandler)
 
-	put_api.HandleFunc("/batch", AddBatchHandler)
-	get_api.HandleFunc("/batch", GetBatchsHandler)
-	get_api.HandleFunc("/batch/stats", GetBatchStatHandler)
-	get_api.HandleFunc("/batch/active", GetActiveBatchsHandler)
-	get_api.HandleFunc("/batch/{id:[0-9]+}", GetBatchByIdHandler)
-	del_api.HandleFunc("/batch/{id:[0-9]+}", DeleteBatchHandler)
+	putAPI.HandleFunc("/batch", AddBatchHandler)
+	getAPI.HandleFunc("/batch", GetBatchsHandler)
+	getAPI.HandleFunc("/batch/stats", GetBatchStatHandler)
+	getAPI.HandleFunc("/batch/active", GetActiveBatchsHandler)
+	getAPI.HandleFunc("/batch/{id:[0-9]+}", GetBatchByIDHandler)
+	delAPI.HandleFunc("/batch/{id:[0-9]+}", DeleteBatchHandler)
 
-	get_api.HandleFunc("/namespace", GetNamespaceHandler)
-	get_api.HandleFunc("/namespace/{name:[--~]+}", GetNamespaceByNameHandler)
-	put_api.HandleFunc("/namespace", PutNamespaceHandler)
-	del_api.HandleFunc("/namespace/{name:[--~]+}", AddRepoHandler)
-	del_api.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
+	getAPI.HandleFunc("/namespace", GetNamespaceHandler)
+	getAPI.HandleFunc("/namespace/{name:[--~]+}", GetNamespaceByNameHandler)
+	putAPI.HandleFunc("/namespace", PutNamespaceHandler)
+	delAPI.HandleFunc("/namespace/{name:[--~]+}", AddRepoHandler)
+	delAPI.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
 
-	pst_api.HandleFunc("/ci/{namespace:[--~]+}", PostCommitHandler)
+	pstAPI.HandleFunc("/ci/{namespace:[--~]+}", PostCommitHandler)
 
 	// Launch async server with router
 	var err error
 	(*wait).Add(1)
 	go func() {
 		http.Handle("/", r)
-		log.Print("INFO: Launching http server with crt: '" + crt_file + "'")
-		log.Print("      and key: '" + key_file + "'")
-		err = http.ListenAndServeTLS(":"+port, crt_file, key_file, nil)
+		log.Print("INFO: Launching http server with crt: '" + crtFile + "'")
+		log.Print("      and key: '" + keyFile + "'")
+		err = http.ListenAndServeTLS(":"+port, crtFile, keyFile, nil)
 		defer (*wait).Done()
 	}()
 	time.Sleep(1 * time.Second)
