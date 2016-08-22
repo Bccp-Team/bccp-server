@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bccp-server/mysql"
-	"github.com/bccp-server/scheduler"
+	"github.com/Bccp-Team/bccp-server/mysql"
+	"github.com/Bccp-Team/bccp-server/scheduler"
 	"github.com/gorilla/mux"
 )
 

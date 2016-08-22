@@ -28,3 +28,4 @@ _testmain.go
 *.key
 *.pem
 *.crt
+bccp-server

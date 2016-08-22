@@ -7,11 +7,10 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-
-	"github.com/bccp-server/api"
-	"github.com/bccp-server/mysql"
-	"github.com/bccp-server/runners"
-	"github.com/bccp-server/scheduler"
+	"github.com/Bccp-Team/bccp-server/api"
+	"github.com/Bccp-Team/bccp-server/mysql"
+	"github.com/Bccp-Team/bccp-server/runners"
+	"github.com/Bccp-Team/bccp-server/scheduler"
 )
 
 // Info from config file

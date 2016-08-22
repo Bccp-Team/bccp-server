@@ -3,8 +3,8 @@ package scheduler
 import (
 	"log"
 
-	"github.com/bccp-server/mysql"
-	"github.com/bccp-server/runners"
+	"github.com/Bccp-Team/bccp-server/mysql"
+	"github.com/Bccp-Team/bccp-server/runners"
 )
 
 var (

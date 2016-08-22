@@ -9,9 +9,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bccp-server/ischeduler"
-	"github.com/bccp-server/message"
-	"github.com/bccp-server/mysql"
+	"github.com/Bccp-Team/bccp-server/ischeduler"
+	"github.com/Bccp-Team/bccp-server/message"
+	"github.com/Bccp-Team/bccp-server/mysql"
 )
 
 var (

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/bccp-server/mysql"
+	"github.com/Bccp-Team/bccp-server/mysql"
 	"github.com/gorilla/mux"
 )
 
