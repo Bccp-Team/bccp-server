@@ -1,26 +1,19 @@
-GOPATH_PREFIX=github.com
-PROJECT_NAME=bccp-server
-MYSQL_PKG=${GOPATH_PREFIX}/${PROJECT_NAME}/mysql
-RUNNERS_PKG=${GOPATH_PREFIX}/${PROJECT_NAME}/runners
-API_PKG=${GOPATH_PREFIX}/${PROJECT_NAME}/api
-MAIN_PKG=${GOPATH_PREFIX}/${PROJECT_NAME}
-
 CONFIG_DIR=/etc/bccp
 DEFAULT_CONFIG_FILE=bccp.conf
+PROJECT_NAME=bccp-server
+SOURCES := $(shell find . -name '*.go' -print)
 
-GO=go
-GO_FLAGS=install
+.PHONY: all clean install
 
-all: ${MYSQL_PKG} ${RUNNERS_PKG} ${API_PKG} ${MAIN_PKG}
+all: $(PROJECT_NAME)
+
+clean:
+	$(RM) $(PROJECT_NAME)
 
 install: config
-config: ${CONFIG_DIR}
-	cp ${DEFAULT_CONFIG_FILE} ${CONFIG_DIR}
+	mkdir -p $(CONFIG_DIR)
+	cp $(DEFAULT_CONFIG_FILE) $(CONFIG_DIR)
+	go install ./...
 
-${CONFIG_DIR}:
-	mkdir -p ${CONFIG_DIR}
-
-
-Makefile: ;
-.DEFAULT:
-	${GO} ${GO_FLAGS} $@
+$(PROJECT_NAME): $(SOURCES)
+	go build
