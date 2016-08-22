@@ -6,35 +6,33 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 type Runner struct {
-	Id              int       `json:"id"`
-	Name            string    `json:"name"`
-	Status          string    `json:"status"`
-	Last_connection time.Time `json:"last_connection"`
-	Ip              string    `json:"ip"`
+	ID             int       `json:"id"`
+	Name           string    `json:"name"`
+	Status         string    `json:"status"`
+	LastConnection time.Time `json:"last_connection"`
+	IP             string    `json:"ip"`
 }
 
 func (db *Database) ListRunners(filter map[string]string, limit, offset int) []Runner {
 	var rows *sql.Rows
 	var err error
 
-	limit_req := " ORDER BY last_conn DESC"
+	limitReq := " ORDER BY last_conn DESC"
 
 	if limit > 0 {
-		limit_req += " LIMIT " + strconv.Itoa(limit)
+		limitReq += " LIMIT " + strconv.Itoa(limit)
 	}
 
 	if offset > 0 {
-		limit_req += " OFFSET " + strconv.Itoa(offset)
+		limitReq += " OFFSET " + strconv.Itoa(offset)
 	}
 
 	// Execute the query
 	if len(filter) == 0 {
-		rows, err = db.conn.Query("SELECT * FROM runner" + limit_req)
+		rows, err = db.conn.Query("SELECT * FROM runner" + limitReq)
 	} else {
 		req := "SELECT * FROM runner WHERE "
 		f := make([]string, len(filter))
@@ -46,7 +44,7 @@ func (db *Database) ListRunners(filter map[string]string, limit, offset int) []R
 			l[i] = value
 			i = i + 1
 		}
-		rows, err = db.conn.Query(req+strings.Join(f, " AND ")+limit_req, l...)
+		rows, err = db.conn.Query(req+strings.Join(f, " AND ")+limitReq, l...)
 	}
 
 	if err != nil {
@@ -60,15 +58,15 @@ func (db *Database) ListRunners(filter map[string]string, limit, offset int) []R
 		var id int
 		var name string
 		var status string
-		var last_connection time.Time
+		var lastConnection time.Time
 		var ip string
 		// get RawBytes from data
-		err = rows.Scan(&id, &name, &status, &last_connection, &ip)
+		err = rows.Scan(&id, &name, &status, &lastConnection, &ip)
 		if err != nil {
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		runners = append(runners, Runner{id, name, status, last_connection, ip})
+		runners = append(runners, Runner{id, name, status, lastConnection, ip})
 	}
 
 	if err = rows.Err(); err != nil {
@@ -80,32 +78,30 @@ func (db *Database) ListRunners(filter map[string]string, limit, offset int) []R
 
 // Get runner info by id
 // Return:
-// - Runner if succes
+// - Runner if success
 // - Runner with id < 0 elsewhere
-func (db *Database) GetRunner(runner_id int) (*Runner, error) {
-
+func (db *Database) GetRunner(runnerID int) (*Runner, error) {
 	var id int
 	var name string
 	var status string
-	var last_connection time.Time
+	var lastConnection time.Time
 	var ip string
 	// Execute the query
-	req := "SELECT * FROM runner WHERE runner.id='" + strconv.Itoa(runner_id) + "'"
-	err := db.conn.QueryRow(req).Scan(&id, &name, &status, &last_connection, &ip)
+	req := "SELECT * FROM runner WHERE runner.id='" + strconv.Itoa(runnerID) + "'"
+	err := db.conn.QueryRow(req).Scan(&id, &name, &status, &lastConnection, &ip)
 	if err != nil {
 		log.Print("ERROR: Unable to select runner: ", err.Error())
 		return nil, err
 	}
 
-	return &Runner{id, name, status, last_connection, ip}, nil
+	return &Runner{id, name, status, lastConnection, ip}, nil
 }
 
 // Add runner
 // Return:
-// - Runner id if succes
+// - Runner id if success
 // - -1 elsewhere
 func (db *Database) AddRunner(ip string, name string) (int, error) {
-
 	// Prepare statement for inserting data
 	req := "INSERT INTO runner VALUES(NULL, ?, 'waiting', NULL, ?)"
 	insert, err := db.conn.Prepare(req)
@@ -127,7 +123,7 @@ func (db *Database) AddRunner(ip string, name string) (int, error) {
 
 // Add runner
 // Return:
-// - Runner id if succes
+// - Runner id if success
 // - -1 elsewhere
 func (db *Database) UpdateRunner(id int, state string) error {
 
@@ -150,15 +146,12 @@ func (db *Database) UpdateRunner(id int, state string) error {
 }
 
 func (db *Database) StatRunners() (total, waiting, dead int64, err error) {
-	// Execute the query
-
 	var waitingNull sql.NullInt64
 	var deadNull sql.NullInt64
 
 	req := "SELECT COUNT(*) total, SUM(CASE WHEN status = 'waiting' then 1 else 0 end) waiting, SUM(CASE WHEN status = 'dead' then 1 else 0 end) dead FROM runner"
 
 	err = db.conn.QueryRow(req).Scan(&total, &waitingNull, &deadNull)
-
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
 		return

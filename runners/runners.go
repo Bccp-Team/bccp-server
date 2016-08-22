@@ -66,7 +66,6 @@ func handleClient(conn net.Conn, token *string) {
 
 	var connection message.SubscribeRequest
 	err := decoder.Decode(&connection)
-
 	if err != nil {
 		log.Printf("WARNING: runner: %v: failed to decode connection: %v", conn.RemoteAddr(), err.Error())
 		return
@@ -78,7 +77,6 @@ func handleClient(conn net.Conn, token *string) {
 	}
 
 	uid, err := mysql.Db.AddRunner(conn.RemoteAddr().String(), connection.Name)
-
 	if err != nil {
 		log.Printf("WARNING: runner: %v: failed to add runner: %v", conn.RemoteAddr(), err.Error())
 		return
@@ -89,7 +87,6 @@ func handleClient(conn net.Conn, token *string) {
 	answer := message.SubscribeAnswer{ClientUID: uid}
 
 	err = encoder.Encode(&answer)
-
 	if err != nil {
 		log.Printf("WARNING: runner: %v: failed to encode ack: %v", conn.RemoteAddr(), err.Error())
 		return
@@ -106,7 +103,6 @@ func handleClient(conn net.Conn, token *string) {
 	for {
 		var clientReq message.ClientRequest
 		err = decoder.Decode(&clientReq)
-
 		if err != nil {
 			log.Printf("WARNING: runner: %v: failed to decode request: %v", conn.RemoteAddr(), err.Error())
 			return
@@ -116,9 +112,9 @@ func handleClient(conn net.Conn, token *string) {
 		case message.Ack:
 			client.ack()
 		case message.Finish:
-			client.finish(clientReq.JobId, clientReq.Status)
+			client.finish(clientReq.JobID, clientReq.Status)
 		case message.Logs:
-			client.logs(clientReq.JobId, clientReq.Logs)
+			client.logs(clientReq.JobID, clientReq.Logs)
 		case message.Error:
 			log.Printf("WARNING: runner: %v: receive error: %v", conn.RemoteAddr(), clientReq.Message)
 		default:
@@ -130,7 +126,6 @@ func handleClient(conn net.Conn, token *string) {
 
 func KillRunner(uid int) {
 	runner, ok := runnerMaps[uid]
-
 	if !ok {
 		log.Printf("WARNING: runner: %v: kill an inexistant runner", uid)
 		return
@@ -140,74 +135,64 @@ func KillRunner(uid int) {
 	mysql.Db.UpdateRunner(uid, "dead")
 }
 
-func KillRun(uid, jobId int) {
+func KillRun(uid, jobID int) {
 	runner, ok := runnerMaps[uid]
-
 	if !ok {
-		log.Printf("WARNING: runner: kill a run on an inexistant runner (%v - %v)", uid, jobId)
+		log.Printf("WARNING: runner: kill a run on an inexistant runner (%v - %v)", uid, jobID)
 		return
 	}
 
-	servReq := &message.ServerRequest{Kind: message.Kill, JobId: jobId, Run: nil}
+	servReq := &message.ServerRequest{Kind: message.Kill, JobID: jobID, Run: nil}
 
 	go func() {
 		err := runner.encoder.Encode(servReq)
-
 		if err != nil {
-			log.Printf("WARNING: runner: failed to send kill request (%v - %v)", uid, jobId)
+			log.Printf("WARNING: runner: failed to send kill request (%v - %v)", uid, jobID)
 			return
 		}
-
 	}()
 }
 
-func StartRun(uid, jobId int) error {
+func StartRun(uid, jobID int) error {
 	runner, ok := runnerMaps[uid]
-
 	if !ok {
 		log.Printf("WARNING: runner: %v: run on an inexistant runner", uid)
 		return errors.New("the runner does not exist")
 	}
 
-	run, err := mysql.Db.GetRun(jobId)
-
+	run, err := mysql.Db.GetRun(jobID)
 	if err != nil {
 		log.Printf("WARNING: runner: %v: %v", uid, err.Error())
 		return err
 	}
 
 	repo, err := mysql.Db.GetRepo(run.Repo)
-
 	if err != nil {
-		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobId, err.Error())
+		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobID, err.Error())
 		return err
 	}
 
 	batch, err := mysql.Db.GetBatch(run.Batch)
-
 	if err != nil {
-		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobId, err.Error())
+		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobID, err.Error())
 		return err
 	}
 
-	runReq := &message.RunRequest{Init: batch.Init_script, Repo: repo.Ssh,
-		Name: repo.Repo + "_" + strconv.Itoa(jobId), UpdateTime: uint(batch.Update_time),
+	runReq := &message.RunRequest{Init: batch.InitScript, Repo: repo.SSH,
+		Name: repo.Repo + "_" + strconv.Itoa(jobID), UpdateTime: uint(batch.UpdateTime),
 		Timeout: uint(batch.Timeout)}
-	servReq := &message.ServerRequest{Kind: message.Run, JobId: jobId, Run: runReq}
+	servReq := &message.ServerRequest{Kind: message.Run, JobID: jobID, Run: runReq}
 
 	go func() {
-		mysql.Db.LaunchRun(jobId, uid)
+		mysql.Db.LaunchRun(jobID, uid)
 		err := runner.encoder.Encode(servReq)
-
 		if err != nil {
-			log.Printf("WARNING: runner: failed to send run request (%v - %v): %v", uid, jobId, err.Error())
+			log.Printf("WARNING: runner: failed to send run request (%v - %v): %v", uid, jobID, err.Error())
 			mysql.Db.UpdateRunner(uid, "dead")
 			runner.conn.Close()
-			sched.AddRun(jobId)
+			sched.AddRun(jobID)
 			return
 		}
-
-		//mysql.Db.UpdateRunner(uid, "running")
 	}()
 
 	return nil
@@ -215,7 +200,6 @@ func StartRun(uid, jobId int) error {
 
 func PingRunner(uid int) error {
 	runner, ok := runnerMaps[uid]
-
 	if !ok {
 		log.Printf("WARNING: runner: %v: run on an inexistant runner", uid)
 		return errors.New("the runner does not exist")
@@ -240,37 +224,35 @@ func (client *clientInfo) ack() {
 		log.Printf("WARNING: runner: ack on unknow runner %v: %v", client.uid, err.Error())
 		return
 	}
-	err = mysql.Db.UpdateRunner(r.Id, r.Status)
+
+	err = mysql.Db.UpdateRunner(r.ID, r.Status)
 	if err != nil {
 		log.Printf("WARNING: runner: can't update runner %v: %v", client.uid, err.Error())
 	}
 }
 
-func (client *clientInfo) finish(jobId int, status string) {
-	run, err := mysql.Db.GetRun(jobId)
-
+func (client *clientInfo) finish(jobID int, status string) {
+	run, err := mysql.Db.GetRun(jobID)
 	if err != nil {
-		log.Printf("WARNING: runner: update on unknow run %v - %v: %v", client.uid, jobId, err.Error())
+		log.Printf("WARNING: runner: update on unknow run %v - %v: %v", client.uid, jobID, err.Error())
 		KillRunner(client.uid)
 		return
 	}
 
-	if run.Runner_id != client.uid {
-		log.Printf("WARNING: runner: runner update wrong run %v: %v", client.uid, jobId, err.Error())
+	if run.RunnerID != client.uid {
+		log.Printf("WARNING: runner: runner update wrong run %v %v: %v", client.uid, jobID, err.Error())
 		KillRunner(client.uid)
 		return
 	}
 
 	if run.Status == "running" {
-		err = mysql.Db.UpdateRunStatus(jobId, status)
-
+		err = mysql.Db.UpdateRunStatus(jobID, status)
 		if err != nil {
-			log.Printf("WARNING: runner: update on unknow run %v: %v", jobId, err.Error())
+			log.Printf("WARNING: runner: update on unknow run %v: %v", jobID, err.Error())
 		}
 	}
 
 	err = mysql.Db.UpdateRunner(client.uid, "waiting")
-
 	if err != nil {
 		log.Printf("WARNING: runner: update on unknow runner %v: %v", client.uid, err.Error())
 		KillRunner(client.uid)
@@ -280,17 +262,16 @@ func (client *clientInfo) finish(jobId int, status string) {
 	sched.AddRunner(client.uid)
 }
 
-func (client *clientInfo) logs(jobId int, logs []string) {
-	run, err := mysql.Db.GetRun(jobId)
-
+func (client *clientInfo) logs(jobID int, logs []string) {
+	run, err := mysql.Db.GetRun(jobID)
 	if err != nil {
-		log.Printf("WARNING: runner: update on unknow run %v - %v: %v", client.uid, jobId, err.Error())
+		log.Printf("WARNING: runner: update on unknow run %v - %v: %v", client.uid, jobID, err.Error())
 		KillRunner(client.uid)
 		return
 	}
 
-	if run.Runner_id != client.uid {
-		log.Printf("WARNING: runner: runner update wrong run %v: %v", client.uid, jobId)
+	if run.RunnerID != client.uid {
+		log.Printf("WARNING: runner: runner update wrong run %v: %v", client.uid, jobID)
 		KillRunner(client.uid)
 		return
 	}
@@ -300,9 +281,8 @@ func (client *clientInfo) logs(jobId int, logs []string) {
 		return
 	}
 
-	err = mysql.Db.UpdateRunLogs(jobId, strings.Join(logs, "\n")+"\n")
-
+	err = mysql.Db.UpdateRunLogs(jobID, strings.Join(logs, "\n")+"\n")
 	if err != nil {
-		log.Printf("WARNING: runner: update on unknow run %v: %v", jobId, err.Error())
+		log.Printf("WARNING: runner: update on unknow run %v: %v", jobID, err.Error())
 	}
 }

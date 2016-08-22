@@ -35,8 +35,8 @@ func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 		namespace = &req.Namespace
 	}
 
-	batchs := mysql.Db.ListBatchs(namespace, req.Limit, req.Offset)
-	encoder.Encode(batchs)
+	batches := mysql.Db.ListBatchs(namespace, req.Limit, req.Offset)
+	encoder.Encode(batches)
 }
 
 func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
@@ -64,38 +64,36 @@ func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 		namespace = &req.Namespace
 	}
 
-	batchs := mysql.Db.ListActiveBatchs(namespace, req.Limit, req.Offset)
-	encoder.Encode(batchs)
+	batches := mysql.Db.ListActiveBatches(namespace, req.Limit, req.Offset)
+	encoder.Encode(batches)
 }
 
-func GetBatchByIdHandler(w http.ResponseWriter, r *http.Request) {
+func GetBatchByIDHandler(w http.ResponseWriter, r *http.Request) {
 	type batchInfo struct {
-		Id          int    `json:"id"`
-		Namespace   string `json:"namespace"`
-		Init_script string `json:"init_script"`
-		Update_time int    `json:"update_time"`
-		Timeout     int    `json:"timeout"`
+		ID         int    `json:"id"`
+		Namespace  string `json:"namespace"`
+		InitScript string `json:"init_script"`
+		UpdateTime int    `json:"update_time"`
+		Timeout    int    `json:"timeout"`
 	}
 
 	vars := mux.Vars(r)
 	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	batch, err := mysql.Db.GetBatch(int(id))
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	res := &batchInfo{batch.Id, batch.Namespace, batch.Init_script,
-		batch.Update_time, batch.Timeout}
+	res := &batchInfo{batch.ID, batch.Namespace, batch.InitScript,
+		batch.UpdateTime, batch.Timeout}
 	encoder.Encode(res)
 }
 
@@ -116,8 +114,8 @@ func AddBatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
-	err := decoder.Decode(&runReq)
 
+	err := decoder.Decode(&runReq)
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -128,9 +126,7 @@ func AddBatchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = mysql.Db.AddBatch(runReq.Namespace, runReq.InitScript,
-		runReq.UpdateTime, runReq.Timeout)
-
+	_, err = mysql.Db.AddBatch(runReq.Namespace, runReq.InitScript, runReq.UpdateTime, runReq.Timeout)
 	if err != nil {
 		encoder.Encode(map[string]string{"error": "missing fields"})
 		return
@@ -150,20 +146,18 @@ func GetBatchStatHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 
 	err := decoder.Decode(&req)
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
-	var namespace *string = nil
+	var namespace *string
 
 	if len(req.Namespace) > 0 {
 		namespace = &req.Namespace
 	}
 
 	stats, err := mysql.Db.StatBatch(namespace)
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return

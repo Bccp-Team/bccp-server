@@ -22,7 +22,7 @@ type SubscribeAnswer struct {
 
 type ClientRequest struct {
 	Kind    int
-	JobId   int
+	JobID   int
 	Logs    []string
 	Message string
 	Status  string
@@ -30,7 +30,7 @@ type ClientRequest struct {
 
 type ServerRequest struct {
 	Kind  int
-	JobId int
+	JobID int
 	Run   *RunRequest
 }
 

@@ -2,8 +2,6 @@ package mysql
 
 import (
 	"log"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 // List Runs
@@ -63,7 +61,7 @@ func (db *Database) DeleteNamespace(namespace string) error {
 	}
 
 	for _, repo := range repos {
-		db.DeleteRepoFromNamespace(namespace, repo.Id)
+		db.DeleteRepoFromNamespace(namespace, repo.ID)
 	}
 
 	req := "delete from namespace where name=?"

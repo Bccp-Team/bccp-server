@@ -15,8 +15,8 @@ func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	type request struct {
 		Status string `json:"status"`
 		Name   string `json:"name"`
-		Limit  int    `json:limit`
-		Offset int    `json:offset`
+		Limit  int    `json:"limit"`
+		Offset int    `json:"offset"`
 	}
 
 	var req request
@@ -38,8 +38,8 @@ func GetRunnerHandler(w http.ResponseWriter, r *http.Request) {
 		filter["name"] = req.Name
 	}
 
-	runners := mysql.Db.ListRunners(filter, req.Limit, req.Offset)
-	encoder.Encode(runners)
+	dbRunners := mysql.Db.ListRunners(filter, req.Limit, req.Offset)
+	encoder.Encode(dbRunners)
 }
 
 func GetRunnerStatHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,19 +49,17 @@ func GetRunnerStatHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get information about given runner
-func GetRunnerByIdHandler(w http.ResponseWriter, r *http.Request) {
+func GetRunnerByIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	runner, err := mysql.Db.GetRunner(int(id))
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
@@ -76,14 +74,12 @@ func DeleteRunnerHandler(w http.ResponseWriter, r *http.Request) {
 	encoder := json.NewEncoder(w)
 
 	id, err := strconv.Atoi(vars["id"])
-
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	runners.KillRunner(id)
-
 	encoder.Encode(map[string]string{"ok": "killed"})
 }
 
