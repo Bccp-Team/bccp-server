@@ -9,6 +9,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func GetPingHandler(w http.ResponseWriter, r *http.Request) {
+}
+
 func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile string) {
 	r := mux.NewRouter()
 
@@ -19,6 +22,8 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile str
 	delAPI := r.Methods("DELETE").Subrouter()
 
 	// Define routes
+	getAPI.HandleFunc("/ping", GetPingHandler)
+
 	getAPI.HandleFunc("/runner", GetRunnerHandler)
 	getAPI.HandleFunc("/runner/stats", GetRunnerStatHandler)
 	getAPI.HandleFunc("/runner/{id:[0-9]+}", GetRunnerByIDHandler)
