@@ -24,6 +24,7 @@ func GetRunHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req request
 
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 
@@ -67,6 +68,7 @@ func GetRunStatHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req request
 
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 
@@ -154,6 +156,7 @@ func PutRunHandler(w http.ResponseWriter, r *http.Request) {
 	var runReq runRequest
 	var runRes runResult
 
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 

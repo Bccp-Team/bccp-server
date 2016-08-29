@@ -19,6 +19,7 @@ func GetBatchsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req request
 
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 
@@ -48,6 +49,7 @@ func GetActiveBatchsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req request
 
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 
@@ -112,6 +114,7 @@ func AddBatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	var runReq runRequest
 
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 
@@ -142,6 +145,7 @@ func GetBatchStatHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req request
 
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 

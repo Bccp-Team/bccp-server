@@ -50,6 +50,7 @@ func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var n namespace
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 
@@ -77,8 +78,9 @@ func PutNamespaceHandler(w http.ResponseWriter, r *http.Request) {
 }
 func AddRepoHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	encoder := json.NewEncoder(w)
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
+	encoder := json.NewEncoder(w)
 
 	namespace := vars["name"]
 

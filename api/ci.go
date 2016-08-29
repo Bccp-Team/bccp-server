@@ -26,6 +26,7 @@ type GitRequest struct {
 func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 	var req GitRequest
 
+	defer r.Body.Close()
 	decoder := json.NewDecoder(r.Body)
 	encoder := json.NewEncoder(w)
 
