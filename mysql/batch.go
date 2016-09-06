@@ -9,18 +9,18 @@ import (
 	. "github.com/Bccp-Team/bccp-server/proto/api"
 )
 
-func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
+func (db *Database) ListBatchs(namespace *string, limit, offset int64) []*Batch {
 	var rows *sql.Rows
 	var err error
 
 	limitReq := " ORDER BY creation DESC"
 
 	if limit > 0 {
-		limitReq += " LIMIT " + strconv.Itoa(limit)
+		limitReq += " LIMIT " + strconv.FormatInt(limit, 10)
 	}
 
 	if offset > 0 {
-		limitReq += " OFFSET " + strconv.Itoa(offset)
+		limitReq += " OFFSET " + strconv.FormatInt(offset, 10)
 	}
 
 	if namespace == nil {
@@ -33,7 +33,7 @@ func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 		log.Fatal("ERROR: Unable to select batch: ", err.Error())
 	}
 
-	var batches []Batch
+	var batches []*Batch
 
 	// Fetch rows
 	for rows.Next() {
@@ -50,7 +50,7 @@ func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		batches = append(batches, Batch{id, namespace, initScript, updateTime, timeout, creation.String()})
+		batches = append(batches, &Batch{id, namespace, initScript, updateTime, timeout, creation.String()})
 	}
 
 	if err = rows.Err(); err != nil {
@@ -60,18 +60,18 @@ func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 	return batches
 }
 
-func (db *Database) ListActiveBatches(namespace *string, limit, offset int) []Batch {
+func (db *Database) ListActiveBatches(namespace *string, limit, offset int64) []*Batch {
 	var rows *sql.Rows
 	var err error
 
 	limitReq := " ORDER BY creation DESC"
 
 	if limit > 0 {
-		limitReq += " LIMIT " + strconv.Itoa(limit)
+		limitReq += " LIMIT " + strconv.FormatInt(limit, 10)
 	}
 
 	if offset > 0 {
-		limitReq += " OFFSET " + strconv.Itoa(offset)
+		limitReq += " OFFSET " + strconv.FormatInt(offset, 10)
 	}
 
 	if namespace == nil {
@@ -84,7 +84,7 @@ func (db *Database) ListActiveBatches(namespace *string, limit, offset int) []Ba
 		log.Fatal("ERROR: Unable to select batch: ", err.Error())
 	}
 
-	var batches []Batch
+	var batches []*Batch
 
 	// Fetch rows
 	for rows.Next() {
@@ -101,7 +101,7 @@ func (db *Database) ListActiveBatches(namespace *string, limit, offset int) []Ba
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		batches = append(batches, Batch{id, namespace, initScript, updateTime, timeout, creation.String()})
+		batches = append(batches, &Batch{id, namespace, initScript, updateTime, timeout, creation.String()})
 	}
 	if err = rows.Err(); err != nil {
 		log.Fatal("ERROR: Undefined row err: ", err.Error())
@@ -110,7 +110,7 @@ func (db *Database) ListActiveBatches(namespace *string, limit, offset int) []Ba
 	return batches
 }
 
-func (db *Database) GetBatch(id int) (*Batch, error) {
+func (db *Database) GetBatch(id int64) (*Batch, error) {
 	var bID int64
 	var namespace string
 	var initScript string
@@ -119,7 +119,7 @@ func (db *Database) GetBatch(id int) (*Batch, error) {
 	var creation time.Time
 
 	// Execute the query
-	req := "SELECT * FROM batch WHERE batch.id='" + strconv.Itoa(id) + "'"
+	req := "SELECT * FROM batch WHERE batch.id='" + strconv.FormatInt(id, 10) + "'"
 	err := db.conn.QueryRow(req).Scan(&bID, &namespace, &initScript, &updateTime, &timeout, &creation)
 	if err != nil {
 		log.Print("ERROR: Unable to select batch: ", err.Error())
@@ -168,10 +168,11 @@ func (db *Database) AddBatch(namespace string, initScript string, updateTime int
 	return id, nil
 }
 
-func (db *Database) StatBatch(namespace *string) (stats map[string]int64, err error) {
-	stats = make(map[string]int64)
+func (db *Database) StatBatch(namespace *string) (*BatchStats, error) {
 	var total int64
 	var active sql.NullInt64
+
+	var err error
 
 	req := `SELECT COUNT(*) total,
 		SUM(CASE WHEN EXISTS(SELECT * FROM run
@@ -191,16 +192,8 @@ func (db *Database) StatBatch(namespace *string) (stats map[string]int64, err er
 
 	if err != nil {
 		log.Print("ERROR: Unable to stat batch: ", err.Error())
-		return
+		return nil, err
 	}
 
-	stats["all"] = total
-
-	if active.Valid {
-		stats["active"] = active.Int64
-	} else {
-		stats["active"] = 0
-	}
-
-	return
+	return &BatchStats{total, active.Int64}, nil
 }

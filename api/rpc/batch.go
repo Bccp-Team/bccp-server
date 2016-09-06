@@ -46,3 +46,69 @@ func (*server) BatchStart(ctx context.Context, in *pb.Batch) (*pb.Runs, error) {
 
 	return &pb.Runs{runs}, nil
 }
+
+func (*server) BatchList(ctx context.Context, in *pb.Criteria) (*pb.Batchs, error) {
+	namespace, ok := in.Filters["namespace"]
+	np := &namespace
+	if !ok {
+		np = nil
+	}
+	batchs := mysql.Db.ListBatchs(np, in.Limit, in.Offset)
+
+	return &pb.Batchs{batchs}, nil
+}
+
+func (*server) BatchListActive(ctx context.Context, in *pb.Criteria) (*pb.Batchs, error) {
+	namespace, ok := in.Filters["namespace"]
+	np := &namespace
+	if !ok {
+		np = nil
+	}
+	batchs := mysql.Db.ListActiveBatches(np, in.Limit, in.Offset)
+
+	return &pb.Batchs{batchs}, nil
+}
+
+func (*server) BatchGet(ctx context.Context, in *pb.Batch) (*pb.Batch, error) {
+	batch, err := mysql.Db.GetBatch(in.Id)
+
+	if err != nil {
+		return nil, grpc.Errorf(codes.Unknown, err.Error())
+	}
+
+	return batch, nil
+}
+
+func (*server) BatchAdd(ctx context.Context, in *pb.Batch) (*pb.Batch, error) {
+	batchID, err := mysql.Db.AddBatch(in.Namespace,
+		in.InitScript,
+		in.UpdateTime,
+		in.Timeout)
+
+	if err != nil {
+		return nil, grpc.Errorf(codes.Unknown, err.Error())
+	}
+
+	batch, err := mysql.Db.GetBatch(batchID)
+
+	if err != nil {
+		return nil, grpc.Errorf(codes.Unknown, err.Error())
+	}
+
+	return batch, nil
+}
+
+func (*server) BatchStat(ctx context.Context, in *pb.Criteria) (*pb.BatchStats, error) {
+	namespace, ok := in.Filters["namespace"]
+	np := &namespace
+	if !ok {
+		np = nil
+	}
+	stats, err := mysql.Db.StatBatch(np)
+
+	if err != nil {
+		return nil, grpc.Errorf(codes.Unknown, err.Error())
+	}
+
+	return stats, nil
+}

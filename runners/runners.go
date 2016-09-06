@@ -172,7 +172,7 @@ func StartRun(uid, jobID int64) error {
 		return err
 	}
 
-	batch, err := mysql.Db.GetBatch(int(run.Batch))
+	batch, err := mysql.Db.GetBatch(run.Batch)
 	if err != nil {
 		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobID, err.Error())
 		return err

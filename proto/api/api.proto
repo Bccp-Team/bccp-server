@@ -14,7 +14,12 @@ service Api {
     rpc RunStart(Run) returns (Run);
     rpc RunCancel(Run) returns (Run);
 
+    rpc BatchList(Criteria) returns (Batchs);
+    rpc BatchListActive(Criteria) returns (Batchs);
+    rpc BatchGet(Batch) returns (Batch);
+    rpc BatchAdd(Batch) returns (Batch);
     rpc BatchStart(Batch) returns (Runs);
+    rpc BatchStat(Criteria) returns (BatchStats);
 }
 
 message Runner {
@@ -71,6 +76,15 @@ message Batch {
     int64 updateTime = 4;
     int64 timeout = 5;
     string creation = 6;
+}
+
+message Batchs {
+    repeated Batch batchs = 1;
+}
+
+message BatchStats {
+    int64 total = 1;
+    int64 active = 2;
 }
 
 message Criteria {
