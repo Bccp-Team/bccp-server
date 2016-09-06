@@ -6,31 +6,19 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	. "github.com/Bccp-Team/bccp-server/proto/api"
 )
 
-type Run struct {
-	ID         int       `json:"id"`
-	Status     string    `json:"status"`
-	RunnerID   int       `json:"runner_id"`
-	RunnerName string    `json:"runner_name"`
-	Repo       int       `json:"repo"`
-	RepoName   string    `json:"repo_name"`
-	Batch      int       `json:"batch"`
-	Namespace  string    `json:"namespace"`
-	Logs       string    `json:"logs"`
-	Creation   time.Time `json:"creation"`
-	LastUpdate time.Time `json:"last_update"`
-}
-
 // List Runs
-func (db *Database) ListRuns(filter map[string]string, limit, offset int) ([]Run, error) {
-	var id int
+func (db *Database) ListRuns(filter map[string]string, limit, offset int64) ([]*Run, error) {
+	var id int64
 	var status string
-	var runnerID int
+	var runnerID int64
 	var runnerName sql.NullString
-	var repo int
+	var repo int64
 	var repoName string
-	var batch int
+	var batch int64
 	var namespace string
 	var logs string
 	var creation time.Time
@@ -42,11 +30,11 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int) ([]Run
 	limitReq := " ORDER BY run.last_update DESC"
 
 	if limit > 0 {
-		limitReq += " LIMIT " + strconv.Itoa(limit)
+		limitReq += " LIMIT " + strconv.FormatInt(limit, 10)
 	}
 
 	if offset > 0 {
-		limitReq += " OFFSET " + strconv.Itoa(offset)
+		limitReq += " OFFSET " + strconv.FormatInt(offset, 10)
 	}
 
 	// Execute the query
@@ -70,7 +58,7 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int) ([]Run
 		return nil, err
 	}
 
-	var runs []Run
+	var runs []*Run
 
 	// Fetch rows
 	for rows.Next() {
@@ -82,9 +70,9 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int) ([]Run
 		}
 
 		if !runnerName.Valid {
-			runs = append(runs, Run{id, status, runnerID, "", repo, repoName, batch, namespace, logs, creation, lastUpdate})
+			runs = append(runs, &Run{id, status, runnerID, "", repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String()})
 		} else {
-			runs = append(runs, Run{id, status, runnerID, runnerName.String, repo, repoName, batch, namespace, logs, creation, lastUpdate})
+			runs = append(runs, &Run{id, status, runnerID, runnerName.String, repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String()})
 		}
 	}
 	if err = rows.Err(); err != nil {
@@ -96,21 +84,21 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int) ([]Run
 }
 
 // Get runner info by id
-func (db *Database) GetRun(runID int) (*Run, error) {
-	var id int
+func (db *Database) GetRun(runID int64) (*Run, error) {
+	var id int64
 	var status string
-	var runnerID int
+	var runnerID int64
 	var runnerName sql.NullString
-	var repo int
+	var repo int64
 	var repoName string
-	var batch int
+	var batch int64
 	var namespace string
 	var logs string
 	var creation time.Time
 	var lastUpdate time.Time
 
 	// Execute the query
-	req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs, run.creation, run.last_update FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE run.id='" + strconv.Itoa(runID) + "'"
+	req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs, run.creation, run.last_update FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE run.id='" + strconv.FormatInt(runID, 10) + "'"
 	err := db.conn.QueryRow(req).Scan(&id, &status, &runnerID, &runnerName, &repo, &repoName, &batch, &namespace, &logs, &creation, &lastUpdate)
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
@@ -118,16 +106,16 @@ func (db *Database) GetRun(runID int) (*Run, error) {
 	}
 
 	if !runnerName.Valid {
-		return &Run{id, status, runnerID, "", repo, repoName, batch, namespace, logs, creation, lastUpdate}, nil
+		return &Run{id, status, runnerID, "", repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String()}, nil
 	}
 
-	return &Run{id, status, runnerID, runnerName.String, repo, repoName, batch, namespace, logs, creation, lastUpdate}, nil
+	return &Run{id, status, runnerID, runnerName.String, repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String()}, nil
 }
 
-func (db *Database) LaunchRun(id int, runner int) error {
+func (db *Database) LaunchRun(id int64, runner int64) error {
 	// Prepare statement for inserting data
-	req := "update run set status='running', runner=" + strconv.Itoa(runner)
-	req += " where id=" + strconv.Itoa(id)
+	req := "update run set status='running', runner=" + strconv.FormatInt(runner, 10)
+	req += " where id=" + strconv.FormatInt(id, 10)
 	update, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare: ", err.Error())
@@ -144,9 +132,9 @@ func (db *Database) LaunchRun(id int, runner int) error {
 	return nil
 }
 
-func (db *Database) UpdateRunStatus(id int, state string) error {
+func (db *Database) UpdateRunStatus(id int64, state string) error {
 	// Prepare statement for inserting data
-	req := "update run set status='" + state + "' where id=" + strconv.Itoa(id)
+	req := "update run set status=? where id=?"
 	update, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare: ", err.Error())
@@ -154,7 +142,7 @@ func (db *Database) UpdateRunStatus(id int, state string) error {
 	}
 	defer update.Close()
 
-	_, err = update.Exec()
+	_, err = update.Exec(state, id)
 	if err != nil {
 		log.Print("ERROR: Unable to update status: ", err.Error())
 		return err
@@ -163,7 +151,7 @@ func (db *Database) UpdateRunStatus(id int, state string) error {
 	return nil
 }
 
-func (db *Database) AddRun(depo int, batch int) (int, error) {
+func (db *Database) AddRun(depo int64, batch int64) (int64, error) {
 	req := "INSERT INTO run VALUES(NULL,'waiting',-1,?,?,'',NULL,NULL)"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
@@ -178,11 +166,11 @@ func (db *Database) AddRun(depo int, batch int) (int, error) {
 		return -1, err
 	}
 	id, _ := res.LastInsertId()
-	return int(id), nil
+	return id, nil
 }
 
-func (db *Database) UpdateRunLogs(runID int, newLogs string) error {
-	req := "UPDATE run SET logs=concat(logs, ?) WHERE run.id='" + strconv.Itoa(runID) + "'"
+func (db *Database) UpdateRunLogs(runID int64, newLogs string) error {
+	req := "UPDATE run SET logs=concat(logs, ?) WHERE run.id=?"
 
 	update, err := db.conn.Prepare(req)
 	defer update.Close()
@@ -192,7 +180,7 @@ func (db *Database) UpdateRunLogs(runID int, newLogs string) error {
 		return err
 	}
 
-	_, err = update.Exec(newLogs)
+	_, err = update.Exec(newLogs, runID)
 	if err != nil {
 		log.Print("ERROR: Unable to update logs: ", err.Error())
 		return err
@@ -200,11 +188,10 @@ func (db *Database) UpdateRunLogs(runID int, newLogs string) error {
 
 	return nil
 }
-func (db *Database) StatRun(filter map[string]string) (stats map[string]int64, err error) {
+func (db *Database) StatRun(filter map[string]string) (*RunStats, error) {
 	var total int64
+	var err error
 	var waiting, running, canceled, finished, failed, timeout sql.NullInt64
-
-	stats = make(map[string]int64)
 
 	req := `SELECT COUNT(*) total,
 		SUM(CASE WHEN status = 'waiting' then 1 else 0 end) waiting,
@@ -233,48 +220,18 @@ func (db *Database) StatRun(filter map[string]string) (stats map[string]int64, e
 
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
-		return
+		return nil, err
 	}
 
 	//FIXME refactor
 
-	stats["all"] = total
-
-	if waiting.Valid {
-		stats["waiting"] = waiting.Int64
-	} else {
-		stats["waiting"] = 0
-	}
-
-	if running.Valid {
-		stats["running"] = running.Int64
-	} else {
-		stats["running"] = 0
-	}
-
-	if canceled.Valid {
-		stats["canceled"] = canceled.Int64
-	} else {
-		stats["canceled"] = 0
-	}
-
-	if finished.Valid {
-		stats["finished"] = finished.Int64
-	} else {
-		stats["finished"] = 0
-	}
-
-	if failed.Valid {
-		stats["failed"] = failed.Int64
-	} else {
-		stats["failed"] = 0
-	}
-
-	if timeout.Valid {
-		stats["timeout"] = timeout.Int64
-	} else {
-		stats["timeout"] = 0
-	}
-
-	return
+	return &RunStats{
+		total,
+		waiting.Int64,
+		running.Int64,
+		canceled.Int64,
+		finished.Int64,
+		failed.Int64,
+		timeout.Int64,
+	}, nil
 }

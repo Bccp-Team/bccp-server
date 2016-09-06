@@ -5,16 +5,9 @@ import (
 	"log"
 	"strconv"
 	"time"
-)
 
-type Batch struct {
-	ID         int       `json:"id"`
-	Namespace  string    `json:"namespace"`
-	InitScript string    `json:"init_script"`
-	UpdateTime int       `json:"update_time"`
-	Timeout    int       `json:"timeout"`
-	Creation   time.Time `json:"time"`
-}
+	. "github.com/Bccp-Team/bccp-server/proto/api"
+)
 
 func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 	var rows *sql.Rows
@@ -44,11 +37,11 @@ func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 
 	// Fetch rows
 	for rows.Next() {
-		var id int
+		var id int64
 		var namespace string
 		var initScript string
-		var updateTime int
-		var timeout int
+		var updateTime int64
+		var timeout int64
 		var creation time.Time
 
 		// get RawBytes from data
@@ -57,7 +50,7 @@ func (db *Database) ListBatchs(namespace *string, limit, offset int) []Batch {
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		batches = append(batches, Batch{id, namespace, initScript, updateTime, timeout, creation})
+		batches = append(batches, Batch{id, namespace, initScript, updateTime, timeout, creation.String()})
 	}
 
 	if err = rows.Err(); err != nil {
@@ -95,11 +88,11 @@ func (db *Database) ListActiveBatches(namespace *string, limit, offset int) []Ba
 
 	// Fetch rows
 	for rows.Next() {
-		var id int
+		var id int64
 		var namespace string
 		var initScript string
-		var updateTime int
-		var timeout int
+		var updateTime int64
+		var timeout int64
 		var creation time.Time
 
 		// get RawBytes from data
@@ -108,7 +101,7 @@ func (db *Database) ListActiveBatches(namespace *string, limit, offset int) []Ba
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		batches = append(batches, Batch{id, namespace, initScript, updateTime, timeout, creation})
+		batches = append(batches, Batch{id, namespace, initScript, updateTime, timeout, creation.String()})
 	}
 	if err = rows.Err(); err != nil {
 		log.Fatal("ERROR: Undefined row err: ", err.Error())
@@ -118,11 +111,11 @@ func (db *Database) ListActiveBatches(namespace *string, limit, offset int) []Ba
 }
 
 func (db *Database) GetBatch(id int) (*Batch, error) {
-	var bID int
+	var bID int64
 	var namespace string
 	var initScript string
-	var updateTime int
-	var timeout int
+	var updateTime int64
+	var timeout int64
 	var creation time.Time
 
 	// Execute the query
@@ -133,15 +126,15 @@ func (db *Database) GetBatch(id int) (*Batch, error) {
 		return nil, err
 	}
 
-	return &Batch{id, namespace, initScript, updateTime, timeout, creation}, nil
+	return &Batch{bID, namespace, initScript, updateTime, timeout, creation.String()}, nil
 }
 
 func (db *Database) GetLastBatchFromNamespace(n string) (*Batch, error) {
-	var bID int
+	var bID int64
 	var namespace string
 	var initScript string
-	var updateTime int
-	var timeout int
+	var updateTime int64
+	var timeout int64
 	var creation time.Time
 
 	// Execute the query
@@ -152,10 +145,10 @@ func (db *Database) GetLastBatchFromNamespace(n string) (*Batch, error) {
 		return nil, err
 	}
 
-	return &Batch{bID, namespace, initScript, updateTime, timeout, creation}, nil
+	return &Batch{bID, namespace, initScript, updateTime, timeout, creation.String()}, nil
 }
 
-func (db *Database) AddBatch(namespace string, initScript string, updateTime int, timeout int) (int, error) {
+func (db *Database) AddBatch(namespace string, initScript string, updateTime int64, timeout int64) (int64, error) {
 	// Prepare statement for inserting data
 	req := "INSERT INTO batch VALUES(NULL,?,?,?,?,NULL)"
 	insert, err := db.conn.Prepare(req)
@@ -172,7 +165,7 @@ func (db *Database) AddBatch(namespace string, initScript string, updateTime int
 	}
 
 	id, _ := res.LastInsertId()
-	return int(id), nil
+	return id, nil
 }
 
 func (db *Database) StatBatch(namespace *string) (stats map[string]int64, err error) {

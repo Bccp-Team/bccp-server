@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package front_api;
+
+service Api {
+    rpc RunnerList(Criteria) returns (Runners);
+    rpc RunnerStat(Criteria) returns (RunnerStats);
+    rpc RunnerGet(Runner) returns (Runner);
+    rpc RunnerKill(Runner) returns (Runner);
+
+    rpc RunList(Criteria) returns (Runs);
+    rpc RunStat(Criteria) returns (RunStats);
+    rpc RunGet(Run) returns (Run);
+    rpc RunStart(Run) returns (Run);
+    rpc RunCancel(Run) returns (Run);
+
+    rpc BatchStart(Batch) returns (Runs);
+}
+
+message Runner {
+    int64  id = 1;
+    string name = 2;
+    string status = 3;
+    string date = 4; //FIXME, we could use timestamp here
+    string ip = 5;
+}
+
+message Runners {
+    repeated Runner runners = 1;
+}
+
+message RunnerStats {
+    int64 all = 1;
+    int64 waiting = 2;
+    int64 dead = 3;
+}
+
+message Run {
+    int64  id = 1;
+    string status = 2;
+    int64  runnerId = 3;
+    string runnerName = 4;
+    int64  repoId = 5;
+    string repoName = 6;
+    int64  batch = 7;
+    string namespace = 8;
+    string logs = 9;
+    string creation = 10;
+    string lastUpdate = 11;
+}
+
+message Runs {
+    repeated Run runs = 1;
+}
+
+message RunStats {
+    int64 all = 1;
+    int64 waiting = 2;
+    int64 running = 3;
+    int64 canceled = 4;
+    int64 finished = 5;
+    int64 failed = 6;
+    int64 timeout = 7;
+
+}
+
+message Batch {
+    int64 id = 1;
+    string namespace = 2;
+    string initScript = 3;
+    int64 updateTime = 4;
+    int64 timeout = 5;
+    string creation = 6;
+}
+
+message Criteria {
+    map<string, string> filters = 1;
+    int64 limit = 2;
+    int64 offset = 3;
+}

@@ -15,12 +15,12 @@ import (
 )
 
 var (
-	runnerMaps map[int]*clientInfo
+	runnerMaps map[int64]*clientInfo
 	sched      ischeduler.IScheduler
 )
 
 func WaitRunners(isched ischeduler.IScheduler, service string, token string) {
-	runnerMaps = make(map[int]*clientInfo)
+	runnerMaps = make(map[int64]*clientInfo)
 	sched = isched
 	log.Printf(service)
 
@@ -50,8 +50,8 @@ func WaitRunners(isched ischeduler.IScheduler, service string, token string) {
 }
 
 type clientInfo struct {
-	uid        int
-	currentRun uint
+	uid        int64
+	currentRun uint64
 	conn       net.Conn
 	mut        sync.Mutex
 	encoder    *gob.Encoder
@@ -96,7 +96,7 @@ func handleClient(conn net.Conn, token *string) {
 
 	runnerMaps[uid] = client
 
-	for i := 0; i < connection.Concurrency; i = i + 1 {
+	for i := int64(0); i < connection.Concurrency; i = i + 1 {
 		sched.AddRunner(uid)
 	}
 
@@ -124,7 +124,7 @@ func handleClient(conn net.Conn, token *string) {
 	}
 }
 
-func KillRunner(uid int) {
+func KillRunner(uid int64) {
 	runner, ok := runnerMaps[uid]
 	if !ok {
 		log.Printf("WARNING: runner: %v: kill an inexistant runner", uid)
@@ -135,7 +135,7 @@ func KillRunner(uid int) {
 	mysql.Db.UpdateRunner(uid, "dead")
 }
 
-func KillRun(uid, jobID int) {
+func KillRun(uid, jobID int64) {
 	runner, ok := runnerMaps[uid]
 	if !ok {
 		log.Printf("WARNING: runner: kill a run on an inexistant runner (%v - %v)", uid, jobID)
@@ -153,7 +153,7 @@ func KillRun(uid, jobID int) {
 	}()
 }
 
-func StartRun(uid, jobID int) error {
+func StartRun(uid, jobID int64) error {
 	runner, ok := runnerMaps[uid]
 	if !ok {
 		log.Printf("WARNING: runner: %v: run on an inexistant runner", uid)
@@ -166,21 +166,21 @@ func StartRun(uid, jobID int) error {
 		return err
 	}
 
-	repo, err := mysql.Db.GetRepo(run.Repo)
+	repo, err := mysql.Db.GetRepo(int(run.RepoId))
 	if err != nil {
 		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobID, err.Error())
 		return err
 	}
 
-	batch, err := mysql.Db.GetBatch(run.Batch)
+	batch, err := mysql.Db.GetBatch(int(run.Batch))
 	if err != nil {
 		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobID, err.Error())
 		return err
 	}
 
 	runReq := &message.RunRequest{Init: batch.InitScript, Repo: repo.SSH,
-		Name: repo.Repo + "_" + strconv.Itoa(jobID), UpdateTime: uint(batch.UpdateTime),
-		Timeout: uint(batch.Timeout)}
+		Name: repo.Repo + "_" + strconv.FormatInt(jobID, 10), UpdateTime: uint64(batch.UpdateTime),
+		Timeout: uint64(batch.Timeout)}
 	servReq := &message.ServerRequest{Kind: message.Run, JobID: jobID, Run: runReq}
 
 	go func() {
@@ -198,7 +198,7 @@ func StartRun(uid, jobID int) error {
 	return nil
 }
 
-func PingRunner(uid int) error {
+func PingRunner(uid int64) error {
 	runner, ok := runnerMaps[uid]
 	if !ok {
 		log.Printf("WARNING: runner: %v: run on an inexistant runner", uid)
@@ -225,13 +225,13 @@ func (client *clientInfo) ack() {
 		return
 	}
 
-	err = mysql.Db.UpdateRunner(r.ID, r.Status)
+	err = mysql.Db.UpdateRunner(r.Id, r.Status)
 	if err != nil {
 		log.Printf("WARNING: runner: can't update runner %v: %v", client.uid, err.Error())
 	}
 }
 
-func (client *clientInfo) finish(jobID int, status string) {
+func (client *clientInfo) finish(jobID int64, status string) {
 	run, err := mysql.Db.GetRun(jobID)
 	if err != nil {
 		log.Printf("WARNING: runner: update on unknow run %v - %v: %v", client.uid, jobID, err.Error())
@@ -239,7 +239,7 @@ func (client *clientInfo) finish(jobID int, status string) {
 		return
 	}
 
-	if run.RunnerID != client.uid {
+	if run.RunnerId != int64(client.uid) {
 		log.Printf("WARNING: runner: runner update wrong run %v %v: %v", client.uid, jobID, err.Error())
 		KillRunner(client.uid)
 		return
@@ -262,7 +262,7 @@ func (client *clientInfo) finish(jobID int, status string) {
 	sched.AddRunner(client.uid)
 }
 
-func (client *clientInfo) logs(jobID int, logs []string) {
+func (client *clientInfo) logs(jobID int64, logs []string) {
 	run, err := mysql.Db.GetRun(jobID)
 	if err != nil {
 		log.Printf("WARNING: runner: update on unknow run %v - %v: %v", client.uid, jobID, err.Error())
@@ -270,7 +270,7 @@ func (client *clientInfo) logs(jobID int, logs []string) {
 		return
 	}
 
-	if run.RunnerID != client.uid {
+	if run.RunnerId != int64(client.uid) {
 		log.Printf("WARNING: runner: runner update wrong run %v: %v", client.uid, jobID)
 		KillRunner(client.uid)
 		return

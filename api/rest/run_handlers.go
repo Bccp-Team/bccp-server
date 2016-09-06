@@ -113,7 +113,7 @@ func GetRunByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	run, err := mysql.Db.GetRun(int(id))
+	run, err := mysql.Db.GetRun(int64(id))
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return

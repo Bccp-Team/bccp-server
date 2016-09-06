@@ -3,9 +3,9 @@ DEFAULT_CONFIG_FILE=bccp.conf
 PROJECT_NAME=bccp-server
 SOURCES := $(shell find . -name '*.go' -print)
 
-.PHONY: all clean install
+.PHONY: all clean install proto
 
-all: $(PROJECT_NAME)
+all: proto $(PROJECT_NAME)
 
 clean:
 	$(RM) $(PROJECT_NAME)
@@ -20,6 +20,11 @@ install:
 
 $(PROJECT_NAME): fmt $(SOURCES)
 	go build
+
+proto: proto/api/api.pb.go
+
+proto/api/api.pb.go : proto/api/api.proto
+	protoc -I proto/api proto/api/api.proto --go_out=plugins=grpc:proto/api
 
 lint: ENABLE := vet vetshadow golint ineffassign gosimple
 lint: EXCLUDE := 'comment.*exported' 'that|stutters' 'declaration|of|err|shadows|declaration'

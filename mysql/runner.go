@@ -6,28 +6,22 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	. "github.com/Bccp-Team/bccp-server/proto/api"
 )
 
-type Runner struct {
-	ID             int       `json:"id"`
-	Name           string    `json:"name"`
-	Status         string    `json:"status"`
-	LastConnection time.Time `json:"last_connection"`
-	IP             string    `json:"ip"`
-}
-
-func (db *Database) ListRunners(filter map[string]string, limit, offset int) []Runner {
+func (db *Database) ListRunners(filter map[string]string, limit, offset int64) []*Runner {
 	var rows *sql.Rows
 	var err error
 
 	limitReq := " ORDER BY last_conn DESC"
 
 	if limit > 0 {
-		limitReq += " LIMIT " + strconv.Itoa(limit)
+		limitReq += " LIMIT " + strconv.FormatInt(limit, 10)
 	}
 
 	if offset > 0 {
-		limitReq += " OFFSET " + strconv.Itoa(offset)
+		limitReq += " OFFSET " + strconv.FormatInt(offset, 10)
 	}
 
 	// Execute the query
@@ -51,11 +45,11 @@ func (db *Database) ListRunners(filter map[string]string, limit, offset int) []R
 		log.Fatal("ERROR: Unable to select runner: ", err.Error())
 	}
 
-	var runners []Runner
+	var runners []*Runner
 
 	// Fetch rows
 	for rows.Next() {
-		var id int
+		var id int64
 		var name string
 		var status string
 		var lastConnection time.Time
@@ -66,7 +60,7 @@ func (db *Database) ListRunners(filter map[string]string, limit, offset int) []R
 			log.Fatal("ERROR: Unable to get next row: ", err.Error())
 		}
 
-		runners = append(runners, Runner{id, name, status, lastConnection, ip})
+		runners = append(runners, &Runner{id, name, status, lastConnection.String(), ip})
 	}
 
 	if err = rows.Err(); err != nil {
@@ -80,28 +74,28 @@ func (db *Database) ListRunners(filter map[string]string, limit, offset int) []R
 // Return:
 // - Runner if success
 // - Runner with id < 0 elsewhere
-func (db *Database) GetRunner(runnerID int) (*Runner, error) {
-	var id int
+func (db *Database) GetRunner(runnerID int64) (*Runner, error) {
+	var id int64
 	var name string
 	var status string
 	var lastConnection time.Time
 	var ip string
 	// Execute the query
-	req := "SELECT * FROM runner WHERE runner.id='" + strconv.Itoa(runnerID) + "'"
+	req := "SELECT * FROM runner WHERE runner.id='" + strconv.FormatInt(runnerID, 10) + "'"
 	err := db.conn.QueryRow(req).Scan(&id, &name, &status, &lastConnection, &ip)
 	if err != nil {
 		log.Print("ERROR: Unable to select runner: ", err.Error())
 		return nil, err
 	}
 
-	return &Runner{id, name, status, lastConnection, ip}, nil
+	return &Runner{id, name, status, lastConnection.String(), ip}, nil
 }
 
 // Add runner
 // Return:
 // - Runner id if success
 // - -1 elsewhere
-func (db *Database) AddRunner(ip string, name string) (int, error) {
+func (db *Database) AddRunner(ip string, name string) (int64, error) {
 	// Prepare statement for inserting data
 	req := "INSERT INTO runner VALUES(NULL, ?, 'waiting', NULL, ?)"
 	insert, err := db.conn.Prepare(req)
@@ -118,17 +112,17 @@ func (db *Database) AddRunner(ip string, name string) (int, error) {
 	}
 
 	id, _ := res.LastInsertId()
-	return int(id), nil
+	return id, nil
 }
 
 // Add runner
 // Return:
 // - Runner id if success
 // - -1 elsewhere
-func (db *Database) UpdateRunner(id int, state string) error {
+func (db *Database) UpdateRunner(id int64, state string) error {
 
 	// Prepare statement for inserting data
-	req := "update runner set status='" + state + "' where id=" + strconv.Itoa(id)
+	req := "update runner set status='" + state + "' where id=" + strconv.FormatInt(id, 10)
 	update, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
@@ -145,7 +139,11 @@ func (db *Database) UpdateRunner(id int, state string) error {
 	return nil
 }
 
-func (db *Database) StatRunners() (total, waiting, dead int64, err error) {
+func (db *Database) StatRunners() (stats *RunnerStats, err error) {
+	var total int64
+	var waiting int64
+	var dead int64
+
 	var waitingNull sql.NullInt64
 	var deadNull sql.NullInt64
 
@@ -165,5 +163,5 @@ func (db *Database) StatRunners() (total, waiting, dead int64, err error) {
 		dead = deadNull.Int64
 	}
 
-	return
+	return &RunnerStats{total, waiting, dead}, nil
 }

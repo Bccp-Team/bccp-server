@@ -4,9 +4,8 @@ import (
 	"flag"
 	"log"
 	"os"
-	"sync"
 
-	"github.com/Bccp-Team/bccp-server/api/rest"
+	"github.com/Bccp-Team/bccp-server/api/rpc"
 	"github.com/Bccp-Team/bccp-server/mysql"
 	"github.com/Bccp-Team/bccp-server/runners"
 	"github.com/Bccp-Team/bccp-server/scheduler"
@@ -45,16 +44,18 @@ func main() {
 	flag.Parse()
 
 	var config = ReadConfig(configPath)
-	var wait sync.WaitGroup
 	mysql.Db.Connect(config.MysqlDatabase, config.MysqlUser, config.MysqlPassword)
 
 	go scheduler.DefaultScheduler.Start()
 	go runners.WaitRunners(&scheduler.DefaultScheduler, config.RunnerService, config.RunnerToken)
 
-	api.SetupRestAPI(&wait, config.APIPort, config.CrtFile, config.KeyFile)
+	//api.SetupRestAPI(&wait, config.APIPort, config.CrtFile, config.KeyFile)
 
 	// Mysql tests
 	mysql.Db.Connect(config.MysqlDatabase, config.MysqlUser, config.MysqlPassword)
 
-	wait.Wait()
+	//wait.Wait()
+	err := rpc.SetupRpc("127.0.0.1:50000")
+
+	log.Panic(err)
 }
