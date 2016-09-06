@@ -20,6 +20,11 @@ service Api {
     rpc BatchAdd(Batch) returns (Batch);
     rpc BatchStart(Batch) returns (Runs);
     rpc BatchStat(Criteria) returns (BatchStats);
+
+    rpc NamespaceList(Criteria) returns (Namespaces);
+    rpc NamespaceGet(Namespace) returns (Namespace);
+    rpc NamespaceCreate(Namespace) returns (Namespace);
+    rpc NamespaceAddRepo(Namespace) returns (Namespace);
 }
 
 message Runner {
@@ -85,6 +90,26 @@ message Batchs {
 message BatchStats {
     int64 total = 1;
     int64 active = 2;
+}
+
+message Namespace {
+    string name = 1;
+    repeated Repo repos = 2;
+}
+
+message Namespaces {
+    repeated Namespace namespaces = 1;
+}
+
+message Repo {
+    int64 id = 1;
+    string namespace = 2;
+    string repo = 3;
+    string ssh = 4;
+}
+
+message Repos {
+    repeated Repo repos = 1;
 }
 
 message Criteria {

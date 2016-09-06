@@ -2,10 +2,12 @@ package mysql
 
 import (
 	"log"
+
+	. "github.com/Bccp-Team/bccp-server/proto/api"
 )
 
 // List Runs
-func (db *Database) ListNamespaces() ([]string, error) {
+func (db *Database) ListNamespaces() ([]*Namespace, error) {
 
 	var name string
 	// Execute the query
@@ -15,7 +17,7 @@ func (db *Database) ListNamespaces() ([]string, error) {
 		return nil, err
 	}
 
-	var namespaces []string
+	var namespaces []*Namespace
 
 	// Fetch rows
 	for rows.Next() {
@@ -26,7 +28,7 @@ func (db *Database) ListNamespaces() ([]string, error) {
 			return nil, err
 		}
 
-		namespaces = append(namespaces, name)
+		namespaces = append(namespaces, &Namespace{Name: name})
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -61,7 +63,7 @@ func (db *Database) DeleteNamespace(namespace string) error {
 	}
 
 	for _, repo := range repos {
-		db.DeleteRepoFromNamespace(namespace, repo.ID)
+		db.DeleteRepoFromNamespace(namespace, repo.Id)
 	}
 
 	req := "delete from namespace where name=?"

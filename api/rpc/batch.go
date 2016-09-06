@@ -29,7 +29,7 @@ func (*server) BatchStart(ctx context.Context, in *pb.Batch) (*pb.Runs, error) {
 	}
 
 	for _, repo := range repos {
-		runID, err := mysql.Db.AddRun(int64(repo.ID), batchID)
+		runID, err := mysql.Db.AddRun(repo.Id, batchID)
 
 		if err != nil {
 			return nil, grpc.Errorf(codes.Unknown, err.Error())

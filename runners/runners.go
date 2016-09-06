@@ -166,7 +166,7 @@ func StartRun(uid, jobID int64) error {
 		return err
 	}
 
-	repo, err := mysql.Db.GetRepo(int(run.RepoId))
+	repo, err := mysql.Db.GetRepo(run.RepoId)
 	if err != nil {
 		log.Printf("WARNING: runner: (%v - %v): %v", uid, jobID, err.Error())
 		return err
@@ -178,7 +178,7 @@ func StartRun(uid, jobID int64) error {
 		return err
 	}
 
-	runReq := &message.RunRequest{Init: batch.InitScript, Repo: repo.SSH,
+	runReq := &message.RunRequest{Init: batch.InitScript, Repo: repo.Ssh,
 		Name: repo.Repo + "_" + strconv.FormatInt(jobID, 10), UpdateTime: uint64(batch.UpdateTime),
 		Timeout: uint64(batch.Timeout)}
 	servReq := &message.ServerRequest{Kind: message.Run, JobID: jobID, Run: runReq}
