@@ -38,7 +38,7 @@ create table batch
 (
 	id		serial		not null,
 	namespace	varchar(64)	not null,
-	init_script	text		not null,
+	init_script	mediumtext      not null,
 	update_time	int		not null,
 	timeout		int		not null,
 	creation        timestamp	default current_timestamp,

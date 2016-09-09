@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"log"
@@ -16,40 +16,43 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile str
 	r := mux.NewRouter()
 
 	// Define supported methods
-	getAPI := r.Methods("GET").Subrouter()
 	pstAPI := r.Methods("POST").Subrouter()
-	putAPI := r.Methods("PUT").Subrouter()
-	delAPI := r.Methods("DELETE").Subrouter()
 
-	// Define routes
-	getAPI.HandleFunc("/ping", GetPingHandler)
+	/*
+		getAPI := r.Methods("GET").Subrouter()
+		putAPI := r.Methods("PUT").Subrouter()
+		delAPI := r.Methods("DELETE").Subrouter()
 
-	getAPI.HandleFunc("/runner", GetRunnerHandler)
-	getAPI.HandleFunc("/runner/stats", GetRunnerStatHandler)
-	getAPI.HandleFunc("/runner/{id:[0-9]+}", GetRunnerByIDHandler)
-	delAPI.HandleFunc("/runner/{id:[0-9]+}", DeleteRunnerHandler)
-	pstAPI.HandleFunc("/runner/{id:[0-9]+}/enable", PostEnableRunnerHandler)
-	pstAPI.HandleFunc("/runner/{id:[0-9]+}/disable", PostDisableRunnerHandler)
+		// Define routes
+		getAPI.HandleFunc("/ping", GetPingHandler)
 
-	getAPI.HandleFunc("/run", GetRunHandler)
-	getAPI.HandleFunc("/run/stats", GetRunStatHandler)
-	getAPI.HandleFunc("/run/{id:[0-9]+}", GetRunByIDHandler)
-	putAPI.HandleFunc("/run/{batch_id:[0-9]+}/{repo_id:[0-9]+}", PutRunRepoHandler)
-	putAPI.HandleFunc("/run", PutRunHandler)
-	delAPI.HandleFunc("/run/{id:[0-9]+}", DeleteRunHandler)
+		getAPI.HandleFunc("/runner", GetRunnerHandler)
+		getAPI.HandleFunc("/runner/stats", GetRunnerStatHandler)
+		getAPI.HandleFunc("/runner/{id:[0-9]+}", GetRunnerByIDHandler)
+		delAPI.HandleFunc("/runner/{id:[0-9]+}", DeleteRunnerHandler)
+		pstAPI.HandleFunc("/runner/{id:[0-9]+}/enable", PostEnableRunnerHandler)
+		pstAPI.HandleFunc("/runner/{id:[0-9]+}/disable", PostDisableRunnerHandler)
 
-	putAPI.HandleFunc("/batch", AddBatchHandler)
-	getAPI.HandleFunc("/batch", GetBatchsHandler)
-	getAPI.HandleFunc("/batch/stats", GetBatchStatHandler)
-	getAPI.HandleFunc("/batch/active", GetActiveBatchsHandler)
-	getAPI.HandleFunc("/batch/{id:[0-9]+}", GetBatchByIDHandler)
-	delAPI.HandleFunc("/batch/{id:[0-9]+}", DeleteBatchHandler)
+		getAPI.HandleFunc("/run", GetRunHandler)
+		getAPI.HandleFunc("/run/stats", GetRunStatHandler)
+		getAPI.HandleFunc("/run/{id:[0-9]+}", GetRunByIDHandler)
+		putAPI.HandleFunc("/run/{batch_id:[0-9]+}/{repo_id:[0-9]+}", PutRunRepoHandler)
+		putAPI.HandleFunc("/run", PutRunHandler)
+		delAPI.HandleFunc("/run/{id:[0-9]+}", DeleteRunHandler)
 
-	getAPI.HandleFunc("/namespace", GetNamespaceHandler)
-	getAPI.HandleFunc("/namespace/{name:[--~]+}", GetNamespaceByNameHandler)
-	putAPI.HandleFunc("/namespace", PutNamespaceHandler)
-	delAPI.HandleFunc("/namespace/{name:[--~]+}", AddRepoHandler)
-	delAPI.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
+		putAPI.HandleFunc("/batch", AddBatchHandler)
+		getAPI.HandleFunc("/batch", GetBatchsHandler)
+		getAPI.HandleFunc("/batch/stats", GetBatchStatHandler)
+		getAPI.HandleFunc("/batch/active", GetActiveBatchsHandler)
+		getAPI.HandleFunc("/batch/{id:[0-9]+}", GetBatchByIDHandler)
+		delAPI.HandleFunc("/batch/{id:[0-9]+}", DeleteBatchHandler)
+
+		getAPI.HandleFunc("/namespace", GetNamespaceHandler)
+		getAPI.HandleFunc("/namespace/{name:[--~]+}", GetNamespaceByNameHandler)
+		putAPI.HandleFunc("/namespace", PutNamespaceHandler)
+		delAPI.HandleFunc("/namespace/{name:[--~]+}", AddRepoHandler)
+		delAPI.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
+	*/
 
 	pstAPI.HandleFunc("/ci/{namespace:[--~]+}", PostCommitHandler)
 
