@@ -8,6 +8,7 @@ import (
 	"github.com/Bccp-Team/bccp-server/mysql"
 	pb "github.com/Bccp-Team/bccp-server/proto/api"
 	"github.com/Bccp-Team/bccp-server/runners"
+	"github.com/Bccp-Team/bccp-server/scheduler"
 )
 
 func (*server) RunList(ctx context.Context, in *pb.Criteria) (*pb.Runs, error) {
@@ -54,6 +55,8 @@ func (*server) RunStart(ctx context.Context, in *pb.Run) (*pb.Run, error) {
 	if err != nil {
 		return nil, grpc.Errorf(codes.Unknown, err.Error())
 	}
+
+	scheduler.DefaultScheduler.AddRun(run.Id)
 
 	return run, nil
 }

@@ -1,4 +1,4 @@
-package api
+package rest
 
 import (
 	"encoding/json"
@@ -55,7 +55,7 @@ func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	runID, err := mysql.Db.AddRun(repo.ID, batch.ID)
+	runID, err := mysql.Db.AddRun(repo.Id, batch.Id)
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		log.Printf("ERROR: api: ci: %v", err.Error())
