@@ -17,14 +17,13 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile str
 
 	// Define supported methods
 	pstAPI := r.Methods("POST").Subrouter()
+	getAPI := r.Methods("GET").Subrouter()
 
 	/*
-		getAPI := r.Methods("GET").Subrouter()
 		putAPI := r.Methods("PUT").Subrouter()
 		delAPI := r.Methods("DELETE").Subrouter()
 
 		// Define routes
-		getAPI.HandleFunc("/ping", GetPingHandler)
 
 		getAPI.HandleFunc("/runner", GetRunnerHandler)
 		getAPI.HandleFunc("/runner/stats", GetRunnerStatHandler)
@@ -55,6 +54,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile str
 	*/
 
 	pstAPI.HandleFunc("/ci/{namespace:[--~]+}", PostCommitHandler)
+	getAPI.HandleFunc("/ping", GetPingHandler)
 
 	// Launch async server with router
 	var err error
