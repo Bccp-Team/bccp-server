@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/Bccp-Team/bccp-server/mysql"
 	"github.com/Bccp-Team/bccp-server/scheduler"
@@ -52,6 +53,21 @@ func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		log.Printf("ERROR: api: ci: %v", err.Error())
+		return
+	}
+
+	repoId := strconv.FormatInt(repo.Id, 10)
+
+	runs, err := mysql.Db.ListRuns(map[string]string{"repo": repoId,
+		"status": "waiting"}, 0, 0)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		log.Printf("ERROR: api: ci: %v", err.Error())
+		return
+	}
+
+	if len(runs) > 0 {
 		return
 	}
 

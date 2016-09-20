@@ -117,6 +117,15 @@ func handleClient(conn net.Conn, token *string) {
 			client.logs(clientReq.JobID, clientReq.Logs)
 		case message.Error:
 			log.Printf("WARNING: runner: %v: receive error: %v", conn.RemoteAddr(), clientReq.Message)
+			// FIXME: spread that code
+			runnerId := strconv.FormatInt(uid, 10)
+			runs, _ := mysql.Db.ListRuns(map[string]string{"runner": runnerId,
+				"status": "running"}, 0, 0)
+			for _, run := range runs {
+				log.Printf("runner: kill %v", run.RunnerId)
+				mysql.Db.UpdateRunner(run.Id, "killed")
+			}
+			return
 		default:
 			log.Printf("WARNING: runner: %v: unknow request: %v", conn.RemoteAddr(), clientReq.Kind)
 			return
