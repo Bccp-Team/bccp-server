@@ -64,7 +64,7 @@ func cleanupClient(uid int64) {
 		"status": "running"}, 0, 0)
 	for _, run := range runs {
 		log.Printf("runner: kill %v", run.RunnerId)
-		mysql.Db.UpdateRunner(run.Id, "killed")
+		mysql.Db.UpdateRunStatus(run.Id, "killed")
 		id, err := mysql.Db.AddRun(run.RepoId, run.Batch)
 		if err != nil {
 			log.Printf("runner: could not reschedul %v: %v", run.RunnerId, err.Error())
