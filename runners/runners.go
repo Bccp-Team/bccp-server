@@ -58,7 +58,7 @@ type clientInfo struct {
 	decoder    *gob.Decoder
 }
 
-func cleanupClient(id int64) {
+func cleanupClient(uid int64) {
 	runnerId := strconv.FormatInt(uid, 10)
 	runs, _ := mysql.Db.ListRuns(map[string]string{"runner": runnerId,
 		"status": "running"}, 0, 0)
@@ -67,15 +67,15 @@ func cleanupClient(id int64) {
 		mysql.Db.UpdateRunner(run.Id, "killed")
 		id, err := mysql.Db.AddRun(run.RepoId, run.Batch)
 		if err != nil {
-			log.Error("runner: could not reschedul %v: %v", run.RunnerId, err.Error())
+			log.Printf("runner: could not reschedul %v: %v", run.RunnerId, err.Error())
 			continue
 		}
 		nrun, err := mysql.Db.GetRun(id)
 		if err != nil {
-			log.Error("runner: could not reschedul %v: %v", run.RunnerId, err.Error())
+			log.Printf("runner: could not reschedul %v: %v", run.RunnerId, err.Error())
 			continue
 		}
-		scheduler.DefaultScheduler.AddRun(nrun.Id)
+		sched.AddRun(nrun.Id)
 	}
 }
 
