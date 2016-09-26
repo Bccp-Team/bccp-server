@@ -58,6 +58,27 @@ type clientInfo struct {
 	decoder    *gob.Decoder
 }
 
+func cleanupClient(id int64) {
+	runnerId := strconv.FormatInt(uid, 10)
+	runs, _ := mysql.Db.ListRuns(map[string]string{"runner": runnerId,
+		"status": "running"}, 0, 0)
+	for _, run := range runs {
+		log.Printf("runner: kill %v", run.RunnerId)
+		mysql.Db.UpdateRunner(run.Id, "killed")
+		id, err := mysql.Db.AddRun(run.RepoId, run.Batch)
+		if err != nil {
+			log.Error("runner: could not reschedul %v: %v", run.RunnerId, err.Error())
+			continue
+		}
+		nrun, err := mysql.Db.GetRun(id)
+		if err != nil {
+			log.Error("runner: could not reschedul %v: %v", run.RunnerId, err.Error())
+			continue
+		}
+		scheduler.DefaultScheduler.AddRun(nrun.Id)
+	}
+}
+
 func handleClient(conn net.Conn, token *string) {
 	defer conn.Close()
 	log.Printf("WARNING: runner: %v: start connection", conn.RemoteAddr())
@@ -82,6 +103,7 @@ func handleClient(conn net.Conn, token *string) {
 		return
 	}
 
+	defer cleanupClient(uid)
 	defer mysql.Db.UpdateRunner(uid, "dead")
 
 	answer := message.SubscribeAnswer{ClientUID: uid}
@@ -118,13 +140,6 @@ func handleClient(conn net.Conn, token *string) {
 		case message.Error:
 			log.Printf("WARNING: runner: %v: receive error: %v", conn.RemoteAddr(), clientReq.Message)
 			// FIXME: spread that code
-			runnerId := strconv.FormatInt(uid, 10)
-			runs, _ := mysql.Db.ListRuns(map[string]string{"runner": runnerId,
-				"status": "running"}, 0, 0)
-			for _, run := range runs {
-				log.Printf("runner: kill %v", run.RunnerId)
-				mysql.Db.UpdateRunner(run.Id, "killed")
-			}
 			return
 		default:
 			log.Printf("WARNING: runner: %v: unknow request: %v", conn.RemoteAddr(), clientReq.Kind)
