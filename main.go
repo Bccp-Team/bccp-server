@@ -21,6 +21,7 @@ type Config struct {
 	RunnerToken   string
 	KeyFile       string
 	CrtFile       string
+	MysqlService  string
 	MysqlDatabase string
 	MysqlUser     string
 	MysqlPassword string
@@ -48,13 +49,10 @@ func main() {
 	flag.Parse()
 
 	var config = ReadConfig(configPath)
-	mysql.Db.Connect(config.MysqlDatabase, config.MysqlUser, config.MysqlPassword)
+	mysql.Db.Connect(config.MysqlService, config.MysqlDatabase, config.MysqlUser, config.MysqlPassword)
 
 	go scheduler.DefaultScheduler.Start()
 	go runners.WaitRunners(&scheduler.DefaultScheduler, config.RunnerService, config.RunnerToken)
-
-	// Mysql tests
-	mysql.Db.Connect(config.MysqlDatabase, config.MysqlUser, config.MysqlPassword)
 
 	rest.SetupRestAPI(&wait, config.APIPort, config.CrtFile, config.KeyFile)
 
