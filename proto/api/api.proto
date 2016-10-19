@@ -57,6 +57,8 @@ message Run {
     string logs = 9;
     string creation = 10;
     string lastUpdate = 11;
+    string startDate = 12;
+    string duration = 13;
 }
 
 message Runs {

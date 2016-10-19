@@ -23,6 +23,7 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int64) ([]*
 	var logs string
 	var creation time.Time
 	var lastUpdate time.Time
+	var startTime time.Time
 
 	var rows *sql.Rows
 	var err error
@@ -39,9 +40,9 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int64) ([]*
 
 	// Execute the query
 	if len(filter) == 0 {
-		rows, err = db.conn.Query("SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.creation, run.last_update FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id" + limitReq)
+		rows, err = db.conn.Query("SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.creation, run.last_update, run.start_time FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id" + limitReq)
 	} else {
-		req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.creation, run.last_update FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE "
+		req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.creation, run.last_update, run.start_time FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE "
 		f := make([]string, len(filter))
 		i := 0
 		l := make([]interface{}, len(filter))
@@ -63,17 +64,13 @@ func (db *Database) ListRuns(filter map[string]string, limit, offset int64) ([]*
 	// Fetch rows
 	for rows.Next() {
 		// get RawBytes from data
-		err = rows.Scan(&id, &status, &runnerID, &runnerName, &repo, &repoName, &batch, &namespace, &creation, &lastUpdate)
+		err = rows.Scan(&id, &status, &runnerID, &runnerName, &repo, &repoName, &batch, &namespace, &creation, &lastUpdate, &startTime)
 		if err != nil {
 			log.Print("ERROR: Unable to get next row: ", err.Error())
 			return nil, err
 		}
 
-		if !runnerName.Valid {
-			runs = append(runs, &Run{id, status, runnerID, "", repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String()})
-		} else {
-			runs = append(runs, &Run{id, status, runnerID, runnerName.String, repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String()})
-		}
+		runs = append(runs, &Run{id, status, runnerID, runnerName.String, repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String(), startTime.String(), lastUpdate.Sub(startTime).String()})
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -96,26 +93,22 @@ func (db *Database) GetRun(runID int64) (*Run, error) {
 	var logs string
 	var creation time.Time
 	var lastUpdate time.Time
+	var startTime time.Time
 
 	// Execute the query
-	req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs, run.creation, run.last_update FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE run.id='" + strconv.FormatInt(runID, 10) + "'"
-	err := db.conn.QueryRow(req).Scan(&id, &status, &runnerID, &runnerName, &repo, &repoName, &batch, &namespace, &logs, &creation, &lastUpdate)
+	req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs, run.creation, run.last_update, run.start_time FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE run.id='" + strconv.FormatInt(runID, 10) + "'"
+	err := db.conn.QueryRow(req).Scan(&id, &status, &runnerID, &runnerName, &repo, &repoName, &batch, &namespace, &logs, &creation, &lastUpdate, &startTime)
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
 		return nil, err
 	}
 
-	if !runnerName.Valid {
-		return &Run{id, status, runnerID, "", repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String()}, nil
-	}
-
-	return &Run{id, status, runnerID, runnerName.String, repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String()}, nil
+	return &Run{id, status, runnerID, runnerName.String, repo, repoName, batch, namespace, logs, creation.String(), lastUpdate.String(), startTime.String(), lastUpdate.Sub(startTime).String()}, nil
 }
 
 func (db *Database) LaunchRun(id int64, runner int64) error {
 	// Prepare statement for inserting data
-	req := "update run set status='running', runner=" + strconv.FormatInt(runner, 10)
-	req += " where id=" + strconv.FormatInt(id, 10)
+	req := "update run set status='running', runner=?, start_time=now() where id=?"
 	update, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare: ", err.Error())
@@ -123,7 +116,7 @@ func (db *Database) LaunchRun(id int64, runner int64) error {
 	}
 	defer update.Close()
 
-	_, err = update.Exec()
+	_, err = update.Exec(runner, id)
 	if err != nil {
 		log.Print("ERROR: Unable to update run: ", err.Error())
 		return err
@@ -152,10 +145,10 @@ func (db *Database) UpdateRunStatus(id int64, state string) error {
 }
 
 func (db *Database) AddRun(depo int64, batch int64) (int64, error) {
-	req := "INSERT INTO run VALUES(NULL,'waiting',0,?,?,'',NULL,NULL)"
+	req := "INSERT INTO run VALUES(NULL,'waiting',0,?,?,'',NULL,NULL,NULL)"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
-		log.Print("ERROR: Unable to prepare add runner: ", err.Error())
+		log.Print("ERROR: Unable to prepare add run: ", err.Error())
 		return -1, err
 	}
 	defer insert.Close()

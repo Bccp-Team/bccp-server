@@ -59,6 +59,8 @@ create table run
 	creation    timestamp	    default current_timestamp,
 	last_update timestamp	    default current_timestamp
                                     on update current_timestamp,
+        start_time  timestamp       default current_timestamp,
+
 	primary key (id),
 	foreign key(repo) references namespace_repos(id),
 	foreign key(batch) references batch(id)
