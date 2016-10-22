@@ -139,8 +139,6 @@ func handleClient(conn net.Conn, token *string) {
 			client.logs(clientReq.JobID, clientReq.Logs)
 		case message.Error:
 			log.Printf("WARNING: runner: %v: receive error: %v", conn.RemoteAddr(), clientReq.Message)
-			// FIXME: spread that code
-			return
 		default:
 			log.Printf("WARNING: runner: %v: unknow request: %v", conn.RemoteAddr(), clientReq.Kind)
 			return
@@ -302,6 +300,8 @@ func (client *clientInfo) logs(jobID int64, logs []string) {
 
 	if run.Status != "running" {
 		//FIXME logs
+		log.Printf("WARNING: runner: update on finished run %v: %v", client.uid, jobID)
+		KillRun(client.uid, jobID)
 		return
 	}
 
