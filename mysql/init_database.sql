@@ -38,7 +38,7 @@ create table batch
 (
 	id		serial		not null,
 	namespace	varchar(64)	not null,
-	init_script	longtext        not null,
+	init_script	mediumtext      not null,
 	update_time	int		not null,
 	timeout		int		not null,
 	creation        timestamp	default current_timestamp,
@@ -55,7 +55,7 @@ create table run
 	runner	    bigint unsigned not null,
 	repo        bigint unsigned not null,
 	batch	    bigint unsigned not null,
-	logs	    text	    not null,
+	logs	    mediumtext	    not null,
 	creation    timestamp	    default current_timestamp,
 	last_update timestamp	    default current_timestamp
                                     on update current_timestamp,
