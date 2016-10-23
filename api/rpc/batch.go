@@ -12,17 +12,17 @@ import (
 	"github.com/Bccp-Team/bccp-server/scheduler"
 )
 
-func (*server) BatchStart(ctx context.Context, in *pb.Batch) (*pb.Runs, error) {
-	batchID, err := mysql.Db.AddBatch(in.Namespace,
-		in.InitScript,
-		in.UpdateTime,
-		in.Timeout)
+func (*server) BatchStart(ctx context.Context, in *pb.BatchCreation) (*pb.Runs, error) {
+	batchID, err := mysql.Db.AddBatch(in.Batch.Namespace,
+		in.Batch.InitScript,
+		in.Batch.UpdateTime,
+		in.Batch.Timeout)
 
 	if err != nil {
 		return nil, grpc.Errorf(codes.Unknown, err.Error())
 	}
 
-	repos, err := mysql.Db.GetNamespaceRepos(&in.Namespace)
+	repos, err := mysql.Db.GetNamespaceRepos(&in.Batch.Namespace)
 
 	if err != nil {
 		return nil, grpc.Errorf(codes.Unknown, err.Error())
@@ -33,13 +33,13 @@ func (*server) BatchStart(ctx context.Context, in *pb.Batch) (*pb.Runs, error) {
 			continue
 		}
 
-		runID, err := mysql.Db.AddRun(repo.Id, batchID)
+		runID, err := mysql.Db.AddRun(repo.Id, batchID, in.Priority)
 
 		if err != nil {
 			return nil, grpc.Errorf(codes.Unknown, err.Error())
 		}
 
-		scheduler.DefaultScheduler.AddRun(runID)
+		scheduler.DefaultScheduler.AddRun(&pb.Run{Id: runID, Priority: in.Priority})
 	}
 
 	runs, err := mysql.Db.ListRuns(map[string]string{"batch": strconv.FormatInt(batchID, 10)}, 0, 0)

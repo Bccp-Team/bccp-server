@@ -1,7 +1,9 @@
 package ischeduler
 
+import . "github.com/Bccp-Team/bccp-server/proto/api"
+
 type IScheduler interface {
-	AddRun(run int64)
+	AddRun(run *Run)
 	AddRunner(runner int64)
 	Start()
 }

@@ -145,8 +145,8 @@ func (db *Database) UpdateRunStatus(id int64, state string) error {
 	return nil
 }
 
-func (db *Database) AddRun(depo int64, batch int64) (int64, error) {
-	req := "INSERT INTO run VALUES(NULL,'waiting',0,?,?,'',NULL,NULL,NULL, 0)"
+func (db *Database) AddRun(depo int64, batch int64, priority uint32) (int64, error) {
+	req := "INSERT INTO run VALUES(NULL,'waiting',0,?,?,'',NULL,NULL,NULL,?)"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add run: ", err.Error())
@@ -154,7 +154,7 @@ func (db *Database) AddRun(depo int64, batch int64) (int64, error) {
 	}
 	defer insert.Close()
 
-	res, err := insert.Exec(depo, batch)
+	res, err := insert.Exec(depo, batch, priority)
 	if err != nil {
 		log.Print("ERROR: Unable to insert run: ", err.Error())
 		return -1, err

@@ -18,7 +18,7 @@ service Api {
     rpc BatchListActive(Criteria) returns (Batchs);
     rpc BatchGet(Batch) returns (Batch);
     rpc BatchAdd(Batch) returns (Batch);
-    rpc BatchStart(Batch) returns (Runs);
+    rpc BatchStart(BatchCreation) returns (Runs);
     rpc BatchStat(Criteria) returns (BatchStats);
 
     rpc NamespaceList(Criteria) returns (Namespaces);
@@ -76,6 +76,11 @@ message RunStats {
     int64 failed = 6;
     int64 timeout = 7;
 
+}
+
+message BatchCreation {
+    Batch  batch = 1;
+    uint32 priority = 2;
 }
 
 message Batch {

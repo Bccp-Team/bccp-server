@@ -9,6 +9,8 @@ import (
 	"github.com/Bccp-Team/bccp-server/mysql"
 	"github.com/Bccp-Team/bccp-server/scheduler"
 	"github.com/gorilla/mux"
+
+	. "github.com/Bccp-Team/bccp-server/proto/api"
 )
 
 type GitRequest struct {
@@ -76,12 +78,12 @@ func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	runID, err := mysql.Db.AddRun(repo.Id, batch.Id)
+	runID, err := mysql.Db.AddRun(repo.Id, batch.Id, 5)
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		log.Printf("ERROR: api: ci: %v", err.Error())
 		return
 	}
 
-	scheduler.DefaultScheduler.AddRun(runID)
+	scheduler.DefaultScheduler.AddRun(&Run{Id: runID, Priority: 5})
 }

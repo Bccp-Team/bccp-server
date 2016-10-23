@@ -44,7 +44,7 @@ func (*server) RunGet(ctx context.Context, in *pb.Run) (*pb.Run, error) {
 }
 
 func (*server) RunStart(ctx context.Context, in *pb.Run) (*pb.Run, error) {
-	id, err := mysql.Db.AddRun(in.RepoId, in.Batch)
+	id, err := mysql.Db.AddRun(in.RepoId, in.Batch, in.Priority)
 
 	if err != nil {
 		return nil, grpc.Errorf(codes.Unknown, err.Error())
@@ -56,7 +56,7 @@ func (*server) RunStart(ctx context.Context, in *pb.Run) (*pb.Run, error) {
 		return nil, grpc.Errorf(codes.Unknown, err.Error())
 	}
 
-	scheduler.DefaultScheduler.AddRun(run.Id)
+	scheduler.DefaultScheduler.AddRun(run)
 
 	return run, nil
 }
