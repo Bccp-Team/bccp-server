@@ -8,7 +8,7 @@ import (
 )
 
 func (db *Database) AddRepoToNamespace(namespace string, repo string, ssh string) (int, error) {
-	req := "INSERT INTO namespace_repos VALUES(NULL,?,?,?)"
+	req := "INSERT INTO namespace_repos VALUES(NULL,?,?,?,true)"
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add namespace_repo: ", err.Error())

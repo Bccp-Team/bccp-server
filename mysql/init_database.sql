@@ -30,6 +30,7 @@ create table namespace_repos
 	namespace	varchar(64)	not null,
 	repo		varchar(64)	not null,
 	ssh             varchar(128)	not null,
+        active          boolean         default true,
 	primary key (id),
 	foreign key(namespace) references namespace(name)
 );
@@ -60,6 +61,7 @@ create table run
 	last_update timestamp	    default current_timestamp
                                     on update current_timestamp,
         start_time  timestamp       default current_timestamp,
+        priority    int unsigned    default 0,
 
 	primary key (id),
 	foreign key(repo) references namespace_repos(id),
