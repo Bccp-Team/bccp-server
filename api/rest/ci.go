@@ -50,6 +50,11 @@ func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	repo, err := mysql.Db.GetRepoFromName(req.Repository.Name, namespace)
+
+	if !repo.Active {
+		return
+	}
+
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
 		log.Printf("ERROR: api: ci: %v", err.Error())

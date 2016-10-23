@@ -117,3 +117,23 @@ func (db *Database) GetRepoFromName(name string, namespace string) (*Repo, error
 
 	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace}, nil
 }
+
+func (db *Database) UpdateRepoActivation(repoId int64, active bool) error {
+	req := "UPDATE namespace_repos SET active=? WHERE namespace_repos.id=?"
+
+	update, err := db.conn.Prepare(req)
+	defer update.Close()
+
+	if err != nil {
+		log.Print("ERROR: Unable to prepare update repo: ", err.Error())
+		return err
+	}
+
+	_, err = update.Exec(active, repoId)
+	if err != nil {
+		log.Print("ERROR: Unable to update repo: ", err.Error())
+		return err
+	}
+
+	return nil
+}

@@ -29,6 +29,10 @@ func (*server) BatchStart(ctx context.Context, in *pb.Batch) (*pb.Runs, error) {
 	}
 
 	for _, repo := range repos {
+		if !repo.Active {
+			continue
+		}
+
 		runID, err := mysql.Db.AddRun(repo.Id, batchID)
 
 		if err != nil {

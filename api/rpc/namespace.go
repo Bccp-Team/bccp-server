@@ -62,3 +62,13 @@ func (*server) NamespaceAddRepo(ctx context.Context, in *pb.Namespace) (*pb.Name
 	}
 	return &pb.Namespace{in.Name, repos}, nil
 }
+
+func (*server) ReposDesactivate(ctx context.Context, in *pb.Repos) (*pb.Repos, error) {
+	for _, repo := range in.Repos {
+		err := mysql.Db.UpdateRepoActivation(repo.Id, false)
+		if err != nil {
+			return nil, grpc.Errorf(codes.Unknown, err.Error())
+		}
+	}
+	return in, nil
+}
