@@ -37,9 +37,9 @@ func (sched *Scheduler) AddRunner(runner int64) {
 }
 
 func (sched *Scheduler) GetNextRun() int64 {
-	for _, c := range sched.runRequests {
+	for i := range sched.runRequests {
 		select {
-		case r := <-c:
+		case r := <-sched.runRequests[maxPriority-i]:
 			return r
 		default:
 		}

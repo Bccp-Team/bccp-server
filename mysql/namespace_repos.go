@@ -48,16 +48,17 @@ func (db *Database) GetNamespaceRepos(name *string) ([]*Repo, error) {
 	var ssh string
 	var id int64
 	var namespace string
+	var active bool
 
 	var rows *sql.Rows
 	var err error
 
 	// Execute the query
 	if name == nil {
-		req := "SELECT id, repo, ssh, namespace FROM namespace_repos"
+		req := "SELECT id, repo, ssh, namespace, active FROM namespace_repos"
 		rows, err = db.conn.Query(req)
 	} else {
-		req := "SELECT id, repo, ssh, namespace FROM namespace_repos where namespace=?"
+		req := "SELECT id, repo, ssh, namespace, active FROM namespace_repos where namespace=?"
 		rows, err = db.conn.Query(req, *name)
 	}
 	if err != nil {
@@ -70,13 +71,13 @@ func (db *Database) GetNamespaceRepos(name *string) ([]*Repo, error) {
 	// Fetch rows
 	for rows.Next() {
 		// get RawBytes from data
-		err = rows.Scan(&id, &repo, &ssh, &namespace)
+		err = rows.Scan(&id, &repo, &ssh, &namespace, &active)
 		if err != nil {
 			log.Print("ERROR: Unable to get next row: ", err.Error())
 			return nil, err
 		}
 
-		repos = append(repos, &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace})
+		repos = append(repos, &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace, Active: active})
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -90,32 +91,34 @@ func (db *Database) GetRepo(id int64) (*Repo, error) {
 	var repo string
 	var ssh string
 	var namespace string
+	var active bool
 
 	// Execute the query
-	req := "SELECT repo, ssh, namespace FROM namespace_repos where id=?"
-	err := db.conn.QueryRow(req, id).Scan(&repo, &ssh, &namespace)
+	req := "SELECT repo, ssh, namespace, active FROM namespace_repos where id=?"
+	err := db.conn.QueryRow(req, id).Scan(&repo, &ssh, &namespace, &active)
 	if err != nil {
 		log.Print("ERROR: Unable to select namespace repos: ", err.Error())
 		return nil, err
 	}
 
-	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace}, nil
+	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace, Active: active}, nil
 }
 
 func (db *Database) GetRepoFromName(name string, namespace string) (*Repo, error) {
 	var id int64
 	var repo string
 	var ssh string
+	var active bool
 
 	// Execute the query
-	req := "SELECT id, repo, ssh FROM namespace_repos where repo=? AND namespace=?"
-	err := db.conn.QueryRow(req, name, namespace).Scan(&id, &repo, &ssh)
+	req := "SELECT id, repo, ssh, active FROM namespace_repos where repo=? AND namespace=?"
+	err := db.conn.QueryRow(req, name, namespace).Scan(&id, &repo, &ssh, &active)
 	if err != nil {
 		log.Print("ERROR: Unable to select namespace repos: ", err.Error())
 		return nil, err
 	}
 
-	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace}, nil
+	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace, Active: active}, nil
 }
 
 func (db *Database) UpdateRepoActivation(repoId int64, active bool) error {

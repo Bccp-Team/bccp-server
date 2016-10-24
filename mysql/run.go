@@ -98,7 +98,7 @@ func (db *Database) GetRun(runID int64) (*Run, error) {
 
 	// Execute the query
 	req := "SELECT run.id, run.status, run.runner, runner.name, run.repo, namespace_repos.repo, run.batch, batch.namespace, run.logs, run.creation, run.last_update, run.start_time, run.priority FROM run LEFT JOIN runner ON runner.id = run.runner JOIN namespace_repos ON run.repo = namespace_repos.id JOIN batch ON run.batch = batch.id WHERE run.id='" + strconv.FormatInt(runID, 10) + "'"
-	err := db.conn.QueryRow(req).Scan(&id, &status, &runnerID, &runnerName, &repo, &repoName, &batch, &namespace, &logs, &creation, &lastUpdate, &startTime)
+	err := db.conn.QueryRow(req).Scan(&id, &status, &runnerID, &runnerName, &repo, &repoName, &batch, &namespace, &logs, &creation, &lastUpdate, &startTime, &priority)
 	if err != nil {
 		log.Print("ERROR: Unable to select run: ", err.Error())
 		return nil, err
