@@ -14,7 +14,7 @@ create table runner
 					check (status in ('waiting', 'running', 'paused', 'dead')),
 	last_conn	timestamp	default current_timestamp
 					on update current_timestamp,
-	ip		varchar(16)	not null,
+	ip		varchar(64)	not null,
 	primary key (id)
 );
 
