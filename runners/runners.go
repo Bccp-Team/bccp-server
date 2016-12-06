@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Bccp-Team/bccp-server/ischeduler"
 	"github.com/Bccp-Team/bccp-server/message"
@@ -50,12 +51,13 @@ func WaitRunners(isched ischeduler.IScheduler, service string, token string) {
 }
 
 type clientInfo struct {
-	uid        int64
-	currentRun uint64
-	conn       net.Conn
-	mut        sync.Mutex
-	encoder    *gob.Encoder
-	decoder    *gob.Decoder
+	uid         int64
+	currentRun  uint64
+	conn        net.Conn
+	mut         sync.Mutex
+	encoder     *gob.Encoder
+	decoder     *gob.Decoder
+	pingChannel chan bool
 }
 
 func cleanupClient(uid int64) {
@@ -114,13 +116,17 @@ func handleClient(conn net.Conn, token *string) {
 		return
 	}
 
-	client := &clientInfo{uid: uid, conn: conn, encoder: encoder, decoder: decoder}
+	client := &clientInfo{uid: uid, conn: conn, encoder: encoder, decoder: decoder, pingChannel: make(chan bool)}
 
 	runnerMaps[uid] = client
+
+	defer delete(runnerMaps, uid)
 
 	for i := int64(0); i < connection.Concurrency; i = i + 1 {
 		sched.AddRunner(uid)
 	}
+
+	go client.ping()
 
 	for {
 		var clientReq message.ClientRequest
@@ -223,7 +229,7 @@ func StartRun(uid, jobID int64) error {
 func PingRunner(uid int64) error {
 	runner, ok := runnerMaps[uid]
 	if !ok {
-		log.Printf("WARNING: runner: %v: run on an inexistant runner", uid)
+		log.Printf("WARNING: runner: %v: ping on an inexistant runner", uid)
 		return errors.New("the runner does not exist")
 	}
 
@@ -241,6 +247,7 @@ func PingRunner(uid int64) error {
 }
 
 func (client *clientInfo) ack() {
+	client.pingChannel <- true
 	r, err := mysql.Db.GetRunner(client.uid)
 	if err != nil {
 		log.Printf("WARNING: runner: ack on unknow runner %v: %v", client.uid, err.Error())
@@ -250,6 +257,27 @@ func (client *clientInfo) ack() {
 	err = mysql.Db.UpdateRunner(r.Id, r.Status)
 	if err != nil {
 		log.Printf("WARNING: runner: can't update runner %v: %v", client.uid, err.Error())
+	}
+}
+
+func (client *clientInfo) ping() {
+	//FIXME fetch info from config
+	timer := time.After(time.Minute)
+	tick := time.Tick(5 * time.Second)
+
+	for {
+		select {
+		case <-client.pingChannel:
+			timer = time.After(time.Minute)
+		case <-tick:
+			if PingRunner(client.uid) != nil {
+				return
+			}
+		case <-timer:
+			log.Printf("WARNING: runner: %v: timeout", conn.RemoteAddr())
+			client.conn.Close()
+			return
+		}
 	}
 }
 
