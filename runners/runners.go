@@ -274,7 +274,7 @@ func (client *clientInfo) ping() {
 				return
 			}
 		case <-timer:
-			log.Printf("WARNING: runner: %v: timeout", conn.RemoteAddr())
+			log.Printf("WARNING: runner: %v: timeout", client.conn.RemoteAddr())
 			client.conn.Close()
 			return
 		}
