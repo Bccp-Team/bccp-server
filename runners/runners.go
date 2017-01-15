@@ -333,6 +333,10 @@ func (client *clientInfo) logs(jobID int64, logs []string) {
 		return
 	}
 
+	if logs != nil {
+		return
+	}
+
 	err = mysql.Db.UpdateRunLogs(jobID, strings.Join(logs, "\n")+"\n")
 	if err != nil {
 		log.Printf("WARNING: runner: update on unknow run %v: %v", jobID, err.Error())
