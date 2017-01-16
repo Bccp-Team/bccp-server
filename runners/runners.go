@@ -18,11 +18,13 @@ import (
 var (
 	runnerMaps map[int64]*clientInfo
 	sched      ischeduler.IScheduler
+	mutex      sync.RWMutex
 )
 
 func WaitRunners(isched ischeduler.IScheduler, service string, token string) {
 	runnerMaps = make(map[int64]*clientInfo)
 	sched = isched
+	mutex := sync.RWMutex{}
 	log.Printf(service)
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", service)
@@ -118,9 +120,15 @@ func handleClient(conn net.Conn, token *string) {
 
 	client := &clientInfo{uid: uid, conn: conn, encoder: encoder, decoder: decoder, pingChannel: make(chan bool)}
 
+	mutex.Lock()
 	runnerMaps[uid] = client
+	mutex.Unlock()
 
-	defer delete(runnerMaps, uid)
+	defer func() {
+		mutex.Lock()
+		delete(runnerMaps, uid)
+		mutex.Unlock()
+	}()
 
 	for i := int64(0); i < connection.Concurrency; i = i + 1 {
 		sched.AddRunner(uid)
@@ -153,7 +161,9 @@ func handleClient(conn net.Conn, token *string) {
 }
 
 func KillRunner(uid int64) {
+	mutex.RLock()
 	runner, ok := runnerMaps[uid]
+	mutex.RUnlock()
 	if !ok {
 		log.Printf("WARNING: runner: %v: kill an inexistant runner", uid)
 		return
@@ -164,7 +174,9 @@ func KillRunner(uid int64) {
 }
 
 func KillRun(uid, jobID int64) {
+	mutex.RLock()
 	runner, ok := runnerMaps[uid]
+	mutex.RUnlock()
 	if !ok {
 		log.Printf("WARNING: runner: kill a run on an inexistant runner (%v - %v)", uid, jobID)
 		return
@@ -182,7 +194,9 @@ func KillRun(uid, jobID int64) {
 }
 
 func StartRun(uid, jobID int64) error {
+	mutex.RLock()
 	runner, ok := runnerMaps[uid]
+	mutex.RUnlock()
 	if !ok {
 		log.Printf("WARNING: runner: %v: run on an inexistant runner", uid)
 		return errors.New("the runner does not exist")
@@ -227,7 +241,9 @@ func StartRun(uid, jobID int64) error {
 }
 
 func PingRunner(uid int64) error {
+	mutex.RLock()
 	runner, ok := runnerMaps[uid]
+	mutex.RUnlock()
 	if !ok {
 		log.Printf("WARNING: runner: %v: ping on an inexistant runner", uid)
 		return errors.New("the runner does not exist")
