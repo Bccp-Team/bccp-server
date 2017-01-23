@@ -24,7 +24,7 @@ $(PROJECT_NAME): fmt $(SOURCES)
 proto: proto/api/api.pb.go
 python_proto:
 	# protoc -I proto/api proto/api/api.proto --python_out=plugins=grpc:proto/api
-	python -m grpc.tools.protoc -Iproto/api/ --python_out=proto/api/ --grpc_python_out=proto/api proto/api/api.proto
+	python -m grpc_tools.protoc -Iproto/api/ --python_out=proto/api/ --grpc_python_out=proto/api proto/api/api.proto
 
 proto/api/api.pb.go : proto/api/api.proto
 	protoc -I proto/api proto/api/api.proto --go_out=plugins=grpc:proto/api

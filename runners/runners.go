@@ -24,7 +24,6 @@ var (
 func WaitRunners(isched ischeduler.IScheduler, service string, token string) {
 	runnerMaps = make(map[int64]*clientInfo)
 	sched = isched
-	mutex := sync.RWMutex{}
 	log.Printf(service)
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", service)

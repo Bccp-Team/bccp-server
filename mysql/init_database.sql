@@ -21,6 +21,7 @@ create table runner
 create table namespace
 (
 	name	varchar(64)	not null unique,
+        is_ci   boolean,
 	primary key (name)
 );
 

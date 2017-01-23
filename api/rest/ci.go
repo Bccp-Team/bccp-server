@@ -87,3 +87,46 @@ func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 
 	scheduler.DefaultScheduler.AddRun(&Run{Id: runID, Priority: 5})
 }
+
+// FIXME: ugly copy/past from the grpc api, because some peoples cant use grpc
+func PushHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	vars := mux.Vars(r)
+
+	encoder := json.NewEncoder(w)
+	repoStr := vars["repo"]
+	repos, err := mysql.Db.GetCiReposFromName(repoStr)
+
+	if err != nil {
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	for _, repo := range repos {
+		running, err := mysql.Db.ListRuns(map[string]string{
+			"repo":   strconv.FormatInt(repo.Id, 10),
+			"status": "waiting"},
+			0, 0)
+
+		if err != nil || len(running) > 0 {
+			continue
+		}
+
+		batch, err := mysql.Db.GetLastBatchFromNamespace(repo.Namespace)
+
+		if err != nil {
+			//FIXME: log
+			continue
+		}
+
+		runID, err := mysql.Db.AddRun(repo.Id, batch.Id, 5)
+
+		if err != nil {
+			//FIXME: log
+			continue
+		}
+
+		run, err := mysql.Db.GetRun(runID)
+		scheduler.DefaultScheduler.AddRun(run)
+	}
+}

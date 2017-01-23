@@ -26,6 +26,7 @@ service Api {
     rpc NamespaceCreate(Namespace) returns (Namespace);
     rpc NamespaceAddRepo(Namespace) returns (Namespace);
     rpc ReposDesactivate(Repos) returns (Repos);
+    rpc RepoPush(Repo) returns (Runs);
 }
 
 message Runner {
@@ -104,6 +105,7 @@ message BatchStats {
 message Namespace {
     string name = 1;
     repeated Repo repos = 2;
+    bool   is_ci = 3;
 }
 
 message Namespaces {

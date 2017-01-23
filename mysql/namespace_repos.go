@@ -121,6 +121,40 @@ func (db *Database) GetRepoFromName(name string, namespace string) (*Repo, error
 	return &Repo{Id: id, Repo: repo, Ssh: ssh, Namespace: namespace, Active: active}, nil
 }
 
+func (db *Database) GetCiReposFromName(name string) ([]*Repo, error) {
+	// Execute the query
+	req := `SELECT namespace_repos.id, namespace_repos.repo,
+		       namespace_repos.ssh, namespace_repos.active, namespace_repos.namespace
+	        FROM namespace_repos JOIN namespace ON namespace_repos.namespace=namespace.name
+	        WHERE namespace_repos.repo=? AND namespace.is_ci`
+	rows, err := db.conn.Query(req, name)
+	if err != nil {
+		log.Print("ERROR: Unable to select namespace repos: ", err.Error())
+		return nil, err
+	}
+
+	var repos []*Repo
+
+	for rows.Next() {
+		var id int64
+		var repo string
+		var ssh string
+		var active bool
+		var namespace string
+
+		err = rows.Scan(&id, &repo, &ssh, &active, &namespace)
+
+		if err != nil {
+			log.Print("ERROR: Unable to get next row: ", err.Error())
+			return nil, err
+		}
+
+		repos = append(repos, &Repo{Id: id, Repo: repo, Ssh: ssh, Active: active, Namespace: namespace})
+	}
+
+	return repos, nil
+}
+
 func (db *Database) UpdateRepoActivation(repoId int64, active bool) error {
 	req := "UPDATE namespace_repos SET active=? WHERE namespace_repos.id=?"
 

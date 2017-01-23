@@ -6,7 +6,6 @@ import (
 	. "github.com/Bccp-Team/bccp-server/proto/api"
 )
 
-// List Runs
 func (db *Database) ListNamespaces() ([]*Namespace, error) {
 
 	var name string
@@ -38,8 +37,9 @@ func (db *Database) ListNamespaces() ([]*Namespace, error) {
 	return namespaces, nil
 }
 
-func (db *Database) AddNamespace(namespace string) error {
-	req := "INSERT INTO namespace VALUES(?)"
+func (db *Database) AddNamespace(namespace string, is_ci bool) error {
+	req := "INSERT INTO namespace VALUES(?,?)"
+	log.Println(req)
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add namespace: ", err.Error())
@@ -47,12 +47,23 @@ func (db *Database) AddNamespace(namespace string) error {
 	}
 	defer insert.Close()
 
-	_, err = insert.Exec(namespace)
+	_, err = insert.Exec(namespace, is_ci)
 	if err != nil {
 		log.Print("ERROR: Unable to insert namespace: ", err.Error())
 		return err
 	}
 	return nil
+}
+
+func (db *Database) GetNamespace(namespace string) (*Namespace, error) {
+	var is_ci bool
+	req := "SELECT is_ci FROM namespace where name=?"
+	err := db.conn.QueryRow(req).Scan(&is_ci)
+	if err != nil {
+		log.Print("ERROR: Unable to get namespace: ", err.Error())
+		return nil, err
+	}
+	return &Namespace{Name: namespace, IsCi: is_ci}, nil
 }
 
 func (db *Database) DeleteNamespace(namespace string) error {
