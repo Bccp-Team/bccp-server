@@ -54,7 +54,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile str
 		delAPI.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
 	*/
 
-	putAPI.HandleFunc("/ci/{repo:[--~]+}", PushHandler)
+	putAPI.HandleFunc("/ci/{repo:[--~]+}", PutHandler)
 	pstAPI.HandleFunc("/ci/{namespace:[--~]+}", PostCommitHandler)
 	getAPI.HandleFunc("/ping", GetPingHandler)
 

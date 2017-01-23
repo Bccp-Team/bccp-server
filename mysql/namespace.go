@@ -28,7 +28,7 @@ func (db *Database) ListNamespaces() ([]*Namespace, error) {
 			return nil, err
 		}
 
-		namespaces = append(namespaces, &Namespace{Name: name, Ci: is_ci})
+		namespaces = append(namespaces, &Namespace{Name: name, IsCi: is_ci})
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -58,7 +58,7 @@ func (db *Database) AddNamespace(namespace string, is_ci bool) error {
 func (db *Database) GetNamespace(namespace string) (*Namespace, error) {
 	var is_ci bool
 	req := "SELECT is_ci FROM namespace where name=?"
-	err := db.conn.QueryRow(req).Scan(&is_ci)
+	err := db.conn.QueryRow(req, namespace).Scan(&is_ci)
 	if err != nil {
 		log.Print("ERROR: Unable to get namespace: ", err.Error())
 		return nil, err
