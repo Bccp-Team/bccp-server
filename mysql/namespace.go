@@ -9,6 +9,7 @@ import (
 func (db *Database) ListNamespaces() ([]*Namespace, error) {
 
 	var name string
+	var is_ci bool
 	// Execute the query
 	rows, err := db.conn.Query("SELECT * FROM namespace")
 	if err != nil {
@@ -21,13 +22,13 @@ func (db *Database) ListNamespaces() ([]*Namespace, error) {
 	// Fetch rows
 	for rows.Next() {
 		// get RawBytes from data
-		err = rows.Scan(&name)
+		err = rows.Scan(&name, &is_ci)
 		if err != nil {
 			log.Print("ERROR: Unable to get next row: ", err.Error())
 			return nil, err
 		}
 
-		namespaces = append(namespaces, &Namespace{Name: name})
+		namespaces = append(namespaces, &Namespace{Name: name, Ci: is_ci})
 	}
 	if err = rows.Err(); err != nil {
 		log.Print("ERROR: Undefined row err: ", err.Error())
@@ -39,7 +40,6 @@ func (db *Database) ListNamespaces() ([]*Namespace, error) {
 
 func (db *Database) AddNamespace(namespace string, is_ci bool) error {
 	req := "INSERT INTO namespace VALUES(?,?)"
-	log.Println(req)
 	insert, err := db.conn.Prepare(req)
 	if err != nil {
 		log.Print("ERROR: Unable to prepare add namespace: ", err.Error())
