@@ -16,7 +16,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile str
 	r := mux.NewRouter()
 
 	// Define supported methods
-	pshAPI := r.Methods("PUSH").Subrouter()
+	putAPI := r.Methods("PUT").Subrouter()
 	pstAPI := r.Methods("POST").Subrouter()
 	getAPI := r.Methods("GET").Subrouter()
 
@@ -54,7 +54,7 @@ func SetupRestAPI(wait *sync.WaitGroup, port string, crtFile string, keyFile str
 		delAPI.HandleFunc("/namespace/{name:[--~]+}", DeleteNamespaceHandler)
 	*/
 
-	pshAPI.HandleFunc("/ci/{repo:[--~]+}", PushHandler)
+	putAPI.HandleFunc("/ci/{repo:[--~]+}", PushHandler)
 	pstAPI.HandleFunc("/ci/{namespace:[--~]+}", PostCommitHandler)
 	getAPI.HandleFunc("/ping", GetPingHandler)
 

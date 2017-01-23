@@ -89,7 +89,7 @@ func PostCommitHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // FIXME: ugly copy/past from the grpc api, because some peoples cant use grpc
-func PushHandler(w http.ResponseWriter, r *http.Request) {
+func PutHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	vars := mux.Vars(r)
 
