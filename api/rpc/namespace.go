@@ -125,3 +125,11 @@ func (*server) RepoPush(ctx context.Context, in *pb.Repo) (*pb.Runs, error) {
 	}
 	return &runs, nil
 }
+
+func (*server) NamespaceToggleCI(ctx context.Context, in *pb.Namespace) (*pb.Namespace, error) {
+	err := mysql.Db.ToggleCI(*in)
+	if err != nil {
+		return nil, grpc.Errorf(codes.Unknown, err.Error())
+	}
+	return in, nil
+}

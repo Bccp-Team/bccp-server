@@ -93,3 +93,22 @@ func (db *Database) DeleteNamespace(namespace string) error {
 
 	return nil
 }
+
+func (db *Database) ToggleCI(namespace Namespace) error {
+	req := "UPDATE namespace SET is_ci=? WHERE name=?"
+	update, err := db.conn.Prepare(req)
+	defer update.Close()
+
+	if err != nil {
+		log.Print("ERROR: Unable to prepare toggle ci: ", err.Error())
+		return err
+	}
+
+	_, err = update.Exec(namespace.IsCi, namespace.Name)
+	if err != nil {
+		log.Print("ERROR: Unable to update namespace: ", err.Error())
+		return err
+	}
+
+	return nil
+}

@@ -27,6 +27,7 @@ service Api {
     rpc NamespaceAddRepo(Namespace) returns (Namespace);
     rpc ReposDesactivate(Repos) returns (Repos);
     rpc RepoPush(Repo) returns (Runs);
+    rpc NamespaceToggleCI(Namespace) returns (Namespace);
 }
 
 message Runner {
