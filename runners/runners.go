@@ -348,7 +348,7 @@ func (client *clientInfo) logs(jobID int64, logs []string) {
 		return
 	}
 
-	if logs != nil || len(logs) == 0 {
+	if logs == nil || len(logs) == 0 {
 		return
 	}
 
