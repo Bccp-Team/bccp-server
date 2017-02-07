@@ -95,10 +95,12 @@ func PutHandler(w http.ResponseWriter, r *http.Request) {
 
 	encoder := json.NewEncoder(w)
 	repoStr := vars["repo"]
-	repos, err := mysql.Db.GetCiReposFromName(repoStr)
 
+	repos, err := mysql.Db.GetCiReposFromName(repoStr)
 	if err != nil {
 		encoder.Encode(map[string]string{"error": err.Error()})
+		log.Printf("ERROR: API: CI: cannot get CI repo for %v: %v",
+			repoStr, err)
 		return
 	}
 
@@ -107,22 +109,19 @@ func PutHandler(w http.ResponseWriter, r *http.Request) {
 			"repo":   strconv.FormatInt(repo.Id, 10),
 			"status": "waiting"},
 			0, 0)
-
 		if err != nil || len(running) > 0 {
 			continue
 		}
 
 		batch, err := mysql.Db.GetLastBatchFromNamespace(repo.Namespace)
-
 		if err != nil {
-			//FIXME: log
+			log.Printf("ERROR: API: CI: cannot get last batch: %v", err)
 			continue
 		}
 
 		runID, err := mysql.Db.AddRun(repo.Id, batch.Id, 5)
-
 		if err != nil {
-			//FIXME: log
+			log.Printf("ERROR: API: CI: cannot add run: %v", err)
 			continue
 		}
 
